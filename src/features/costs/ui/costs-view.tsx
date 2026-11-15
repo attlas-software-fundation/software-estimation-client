@@ -5,6 +5,7 @@ import { useProjectCosts } from "../hooks/use-project-costs"
 import { CostsEmptyState } from "./costs-empty-state"
 import { CostsErrorState } from "./costs-error-state"
 import { ProfileCostBreakdownTable } from "./profile-cost-breakdown-table"
+import { ProfileCostDistributionChart } from "./profile-cost-distribution-chart"
 import { ProjectCostSummaryCard } from "./project-cost-summary-card"
 import { TaskCostsTable } from "./task-costs-table"
 
@@ -68,6 +69,10 @@ export const CostsView = ({ projectId }: CostsViewProps) => {
               <TaskCostsTable taskCosts={summary.taskCosts} />
               <ProfileCostBreakdownTable
                 profileBreakdown={summary.profileBreakdown}
+              />
+              <ProfileCostDistributionChart
+                profileBreakdown={summary.profileBreakdown}
+                totalCost={summary.totalCost}
               />
             </>
           ) : (
