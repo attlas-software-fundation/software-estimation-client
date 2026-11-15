@@ -2,12 +2,19 @@ import type { ProjectCostResponse } from "../types/project-cost-response"
 import type { ProjectCostSummary } from "../types/project-cost-summary"
 
 export const adaptProjectCostResponse = (
-  response: ProjectCostResponse
+  response: ProjectCostResponse | null | undefined
 ): ProjectCostSummary => {
+  if (!response) {
+    throw new Error(
+      "El servidor no devolvió el resumen de costos del proyecto."
+    )
+  }
+
   const contributions = response.tasks.flatMap((task) => task.contributions)
 
   return {
     totalCost: response.total.amount,
+    currency: response.total.currency,
     taskCosts: response.tasks.map((task) => ({
       taskId: task.taskId,
       taskName: task.taskId,
@@ -43,8 +50,11 @@ export const adaptProjectCostResponse = (
         profileRole: "",
         profileEmail: "",
         totalHours: items.reduce((total, item) => total + item.hours, 0),
-        cer: first.hourlyRate,
+        cer: items.every((item) => item.hourlyRate === first.hourlyRate)
+          ? first.hourlyRate
+          : null,
         totalCost: profile.subtotal.amount,
+        currency: profile.subtotal.currency,
       }
     }),
   }

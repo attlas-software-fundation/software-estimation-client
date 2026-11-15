@@ -1,6 +1,10 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { adaptProjectCostResponse } from "../src/features/costs/adapters/adapt-project-cost-response.ts"
+import { createSourceLoader } from "./helpers/load-source.mjs"
+
+const { adaptProjectCostResponse } = createSourceLoader()(
+  "src/features/costs/adapters/adapt-project-cost-response.ts"
+)
 
 const createResponse = () => ({
   projectId: "project-1",
@@ -88,6 +92,40 @@ test("accepts a project without tasks or a defined currency", () => {
   })
 
   assert.equal(summary.totalCost, 0)
+  assert.equal(summary.currency, null)
   assert.deepEqual(summary.taskCosts, [])
   assert.deepEqual(summary.profileBreakdown, [])
+})
+
+test("preserves project and profile currencies", () => {
+  const response = createResponse()
+  const summary = adaptProjectCostResponse(response)
+
+  assert.equal(summary.currency, response.total.currency)
+  assert.equal(
+    summary.profileBreakdown[0].currency,
+    response.profiles[0].subtotal.currency
+  )
+})
+
+test("does not present a single CER when profile contributions have different rates", () => {
+  const response = createResponse()
+  response.tasks.push({
+    taskId: "task-2",
+    total: { amount: 60, currency: "PEN" },
+    contributions: [
+      {
+        technicalProfileId: "profile-1",
+        hours: 1,
+        hourlyRate: 60,
+        cost: { amount: 60, currency: "PEN" },
+      },
+    ],
+  })
+
+  const profile = adaptProjectCostResponse(response).profileBreakdown[0]
+
+  assert.equal(profile.totalHours, 10)
+  assert.equal(profile.cer, null)
+  assert.equal(profile.totalCost, response.profiles[0].subtotal.amount)
 })

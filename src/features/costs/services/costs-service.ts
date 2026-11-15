@@ -18,12 +18,6 @@ export const getProjectCostSummary = async (
 ): Promise<ProjectCostSummary> => {
   const response = await getProjectCosts(projectId, signal)
 
-  if (!response) {
-    throw new Error(
-      "El servidor no devolvió el resumen de costos del proyecto."
-    )
-  }
-
   return adaptProjectCostResponse(response)
 }
 

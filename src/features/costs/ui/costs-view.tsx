@@ -59,7 +59,10 @@ export const CostsView = ({ projectId }: CostsViewProps) => {
         </div>
       ) : summary ? (
         <>
-          <ProjectCostSummaryCard totalCost={summary.totalCost} />
+          <ProjectCostSummaryCard
+            totalCost={summary.totalCost}
+            currency={summary.currency}
+          />
           {hasCosts ? (
             <>
               <TaskCostsTable taskCosts={summary.taskCosts} />
