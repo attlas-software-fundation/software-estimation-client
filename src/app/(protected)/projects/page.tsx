@@ -1,6 +1,3 @@
-import Link from "next/link"
-import { PlusIcon } from "lucide-react"
-import { buttonVariants } from "@/components/ui/button"
 import { ProjectsView } from "@/features/projects"
 
 const ProjectsPage = () => {
