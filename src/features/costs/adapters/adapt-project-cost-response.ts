@@ -16,6 +16,8 @@ export const adaptProjectCostResponse = (
         0
       ),
       totalCost: task.total.amount,
+      currency: task.total.currency,
+      contributions: task.contributions,
       profiles: task.contributions.map((item) => ({
         profileId: item.technicalProfileId,
         profileName: item.technicalProfileId,
