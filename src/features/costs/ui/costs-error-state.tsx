@@ -19,8 +19,7 @@ export const CostsErrorState = ({
   if (error instanceof ApiError) {
     switch (error.status) {
       case 400:
-        message =
-          "La solicitud de costos no es válida. Comprueba el identificador del proyecto."
+        message = error.message || "La solicitud de costos no es válida."
         break
       case 401:
         message =
