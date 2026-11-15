@@ -440,7 +440,7 @@ test("costs view distinguishes loading, errors, empty projects and missing respo
   assert.match(refreshing, /disabled/)
 })
 
-test("storage synchronization scopes changes to the project and removes its listener", (context) => {
+test("storage synchronization scopes changes to the project and removes its listener", async (context) => {
   const client = new QueryClient()
   const original = globalThis.window
   let listener
@@ -491,6 +491,7 @@ test("storage synchronization scopes changes to the project and removes its list
   ]) {
     client.setQueryData(key, response)
     listener({ storageArea: localStorage, key: storageKey })
+    await new Promise((resolve) => setImmediate(resolve))
     assert.equal(client.getQueryState(key).isInvalidated, true)
   }
   cleanup()
@@ -516,10 +517,10 @@ test("existing hours and CER mutation callbacks invalidate costs after saving", 
   )
   const key = ["project-costs", "project-1"]
   client.setQueryData(key, response)
-  useUpdateTaskHours("project-1").onSuccess()
+  await useUpdateTaskHours("project-1").onSuccess()
   assert.equal(client.getQueryState(key).isInvalidated, true)
   client.setQueryData(key, response)
-  useUpdateProfile().onSuccess()
+  await useUpdateProfile().onSuccess()
   assert.equal(client.getQueryState(key).isInvalidated, true)
 })
 

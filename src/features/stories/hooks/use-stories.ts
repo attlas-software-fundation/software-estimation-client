@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { PROFILES_QUERY_KEY } from "@/features/profiles/hooks/use-profiles"
 import { invalidateReportQueries } from "@/features/reports/hooks/query-keys"
+import { invalidateProjectCosts } from "@/features/costs/hooks/query-keys"
 import { storiesService } from "../services/stories-service"
 import type { StoryFormValues, TaskFormValues } from "../schemas/story-schema"
 import type { MoveDirection, UserStory } from "../types/story-types"
@@ -26,9 +27,7 @@ export const useStories = (projectId: string, filters: BacklogFilters = {}) => {
       queryClient.invalidateQueries({
         queryKey: ["task-hours", projectId],
       }),
-      queryClient.invalidateQueries({
-        queryKey: ["project-costs", projectId],
-      }),
+      invalidateProjectCosts(queryClient, projectId),
       invalidateReportQueries(queryClient),
     ])
   const backlog = useQuery({
