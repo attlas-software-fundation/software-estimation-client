@@ -1,5 +1,7 @@
 # Issues de costos
 
+> Estado actualizado: consultar [la verificaci?n real del 15/11/2026](costs-live-integration.md). El detalle siguiente conserva la evidencia hist?rica anterior a esa integraci?n.
+
 Los tres issues fueron publicados en `edwinndev/software-estimation-client` con autorización agrupada del usuario y etiqueta `bug`. La revisión previa de issues abiertos y cerrados encontró únicamente el issue #41 del flujo de trabajo del equipo.
 
 Los tres permanecen abiertos. Las correcciones están registradas en commits locales y los criterios técnicos aislados están comprobados. La validación con la API real y la integración a `develop` continúan pendientes.

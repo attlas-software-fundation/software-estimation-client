@@ -1,5 +1,7 @@
 # Integración del módulo de costos
 
+> Estado actualizado: consultar [la verificaci?n real del 15/11/2026](costs-live-integration.md). El detalle siguiente conserva la evidencia hist?rica anterior a esa integraci?n.
+
 ## Alcance y contrato
 
 La vista `/projects/[projectId]/costs` consulta `GET /api/v1/project-costs/{projectId}` mediante `apiClient`. La página resuelve `params` con `await` y entrega el identificador al hook. El backend exige un UUID y el permiso `cost:read`.
@@ -84,7 +86,7 @@ La rama es `feature/frontend-costs-integration`. La referencia remota `develop` 
 | 5      | PMGT-145            | `5607b7f`     | `fix(PMGT-145): preserve backend currencies and identify project base costs`  |
 | 6      | PMGT-146            | `3cb1df3`     | `feat(PMGT-146): display profile cost table and distribution chart`           |
 | 7      | PMGT-147            | `e779439`     | `feat(PMGT-147): synchronize project costs across views and window focus`     |
-| 8      | PMGT-143 a PMGT-147 | `HEAD`        | `feat(PMGT-147): add cost integration verification and presentation evidence` |
+| 8      | PMGT-143 a PMGT-147 | `03dfe3c`     | `feat(PMGT-147): add cost integration verification and presentation evidence` |
 
 El quinto commit incorpora tipos de resumen y perfil, adaptador, servicio compatible, tarjeta del total, tabla con moneda por perfil, regresiones del adaptador, cargador de pruebas y paso de moneda en la vista. El sexto incorpora el gráfico por perfil y su incorporación a la vista. El séptimo incorpora claves, opciones, hook de sincronización, hook de consulta y controles de actualización de la vista. El octavo incorpora la suite de integración y esta documentación con los issues publicados.
 
