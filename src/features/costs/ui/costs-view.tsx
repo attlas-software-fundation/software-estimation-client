@@ -1,6 +1,7 @@
 "use client"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
 import { useProjectCosts } from "../hooks/use-project-costs"
 import { CostsEmptyState } from "./costs-empty-state"
 import { CostsErrorState } from "./costs-error-state"
@@ -29,13 +30,31 @@ export const CostsView = ({ projectId }: CostsViewProps) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Cálculo de costos</h1>
-        <p className="text-muted-foreground text-sm">
-          El costo en soles es horas de la tarea × CER horario del perfil
-          técnico.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Cálculo de costos
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Consulta el costo base y las contribuciones de cada perfil técnico.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isFetching || !projectId.trim()}
+          onClick={() => {
+            void refetch()
+          }}
+        >
+          Actualizar costos
+        </Button>
       </div>
+      {isFetching && !isPending && (
+        <p role="status" className="text-muted-foreground text-sm">
+          Actualizando costos…
+        </p>
+      )}
 
       {!projectId.trim() ? (
         <p role="alert">Selecciona un proyecto para consultar sus costos.</p>
