@@ -314,8 +314,8 @@ const ProjectsFiltersForm = ({
             const fullName = getFullName(user)
 
             return {
-              value: fullName,
-              label: `${fullName} {${user.email}}`,
+              value: user.id,
+              label: `${fullName} (${user.email})`,
               icon: UserRound,
             }
           })
