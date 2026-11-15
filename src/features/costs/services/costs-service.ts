@@ -1,3 +1,6 @@
+﻿import { apiClient } from "@/lib/api/api-client"
+import type { ProjectCostResponse } from "../types/project-cost-response"
+
 import { getTaskHourEntries } from "@/features/estimates/services/task-hours.service"
 import { CURRENCY_CODE } from "@/lib/format"
 import { readJson, STORAGE_KEYS } from "@/lib/storage"
@@ -96,3 +99,12 @@ export const getProjectCostSummary = async (
 export const costsService = {
   getProjectCostSummary,
 }
+
+export const getProjectCosts = (
+  projectId: string,
+  signal?: AbortSignal
+): Promise<ProjectCostResponse | null | undefined> =>
+  apiClient.get<ProjectCostResponse | null | undefined>(
+    "/api/v1/project-costs/" + encodeURIComponent(projectId),
+    { signal }
+  )
