@@ -9,6 +9,7 @@ import {
   BanknoteIcon,
   ShieldAlertIcon,
   FileBarChartIcon,
+  HistoryIcon,
 } from "lucide-react"
 import { useProject } from "@/features/projects/hooks/use-projects"
 import { buttonVariants } from "@/components/ui/button"
@@ -51,6 +52,11 @@ export const ProjectNavTabs = () => {
       title: "Reportes",
       href: `/projects/${projectId}/reports`,
       icon: FileBarChartIcon,
+    },
+    {
+      title: "Historial de estados",
+      href: `/projects/${projectId}/history`,
+      icon: HistoryIcon,
     },
   ]
 

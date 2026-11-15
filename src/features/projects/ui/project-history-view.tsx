@@ -1,164 +1,163 @@
 "use client"
 
-import { useProject } from "../hooks/use-projects"
-// import { useHistory } from "../hooks/use-history"
+import { ArrowRightIcon, ClockIcon, HistoryIcon, UserIcon } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Clock, User, ArrowRight } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import {
+  PROJECT_STATUS_LABELS,
+  PROJECT_STATUS_VARIANTS,
+  toProjectStatus,
+} from "../types/project-status"
+import { useProjectStatusHistory } from "../hooks/use-project-status-history"
 
 interface ProjectHistoryViewProps {
   projectId: string
 }
 
-type BadgeVariant =
-  | "default"
-  | "secondary"
-  | "destructive"
-  | "outline"
-  | "ghost"
-  | "link"
-  | "muted"
-  | "success"
-  | "warning"
-  | "info"
-
-const getEstadoVariant = (estado: string): BadgeVariant => {
-  switch (estado.toLowerCase()) {
-    case "borrador":
-      return "muted"
-    case "en_evaluacion":
-      return "warning"
-    case "estimado":
-      return "info"
-    case "aprobado":
-      return "success"
-    case "rechazado":
-    case "cancelado":
-      return "destructive"
-    case "en_ejecucion":
-    case "en_progreso":
-      return "default"
-    case "finalizado":
-    case "completado":
-      return "secondary"
-    default:
-      return "default"
-  }
-}
-
-const formatStatus = (status: string) => {
-  const map: Record<string, string> = {
-    borrador: "Borrador",
-    en_evaluacion: "En evaluación",
-    estimado: "Estimado",
-    aprobado: "Aprobado",
-    rechazado: "Rechazado",
-    en_ejecucion: "En ejecución",
-    finalizado: "Finalizado",
-    en_progreso: "En Progreso",
-    completado: "Completado",
-    cancelado: "Cancelado",
-  }
-  return map[status.toLowerCase()] || status
-}
-
 export const ProjectHistoryView = ({ projectId }: ProjectHistoryViewProps) => {
-  const { data: project, isLoading, error } = useProject(projectId)
+  const {
+    data: history = [],
+    isLoading,
+    error,
+  } = useProjectStatusHistory(projectId)
 
   if (isLoading) {
     return (
-      <div className="text-muted-foreground text-sm">Cargando historial...</div>
-    )
-  }
-
-  if (error || !project) {
-    return (
-      <div className="text-destructive text-sm">
-        Error al cargar el historial del proyecto.
+      <div className="space-y-4 py-2">
+        <Skeleton className="h-24 w-full rounded-lg" />
+        <Skeleton className="h-24 w-full rounded-lg" />
+        <Skeleton className="h-24 w-full rounded-lg" />
       </div>
     )
   }
 
-  const history = project.history || []
-
-  if (history.length === 0) {
+  if (error) {
     return (
       <Card>
-        <CardContent className="text-muted-foreground py-8 text-center">
-          No hay registros en el historial para este proyecto.
+        <CardContent className="text-destructive py-8 text-center text-sm">
+          Error al cargar el historial cronológico de cambios de estado.
         </CardContent>
       </Card>
     )
   }
 
-  // Ordenar el historial de más reciente a más antiguo
+  if (history.length === 0) {
+    return (
+      <Card>
+        <CardContent className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-12 text-center">
+          <HistoryIcon className="text-muted-foreground/40 size-10" />
+          <p className="text-foreground font-medium">
+            Sin cambios de estado registrados
+          </p>
+          <p className="text-sm">
+            Aún no se han registrado transiciones de estado para este proyecto.
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Asegurar orden descendente por fecha
   const sortedHistory = [...history].sort(
     (a, b) => new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime()
   )
 
   return (
     <div className="space-y-6">
-      <div className="relative ml-3 space-y-8 border-l">
-        {sortedHistory.map((entry) => (
-          <div key={entry.id} className="relative pl-6">
-            <span className="bg-primary ring-background absolute top-1.5 -left-1.5 h-3 w-3 rounded-full ring-4" />
+      <div className="border-border relative ml-3 space-y-6 border-l pl-6">
+        {sortedHistory.map((entry) => {
+          const prevStatus = entry.previousStatus
+            ? toProjectStatus(entry.previousStatus)
+            : null
+          const nextStatus = toProjectStatus(entry.newStatus)
+          const isInitial = !entry.previousStatus
 
-            <Card className="shadow-sm">
-              <CardHeader className="space-y-3 py-4">
-                <CardTitle className="font-heading text-sm">
-                  {entry.previousState
-                    ? "Cambio de estado"
-                    : "Creación de proyecto"}
-                </CardTitle>
-                <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-                  <div className="flex items-center gap-2">
-                    {entry.previousState ? (
-                      <>
-                        <Badge
-                          variant={getEstadoVariant(entry.previousState)}
-                          className="font-medium"
-                        >
-                          {formatStatus(entry.previousState)}
-                        </Badge>
-                        <ArrowRight className="text-muted-foreground h-4 w-4" />
-                        <Badge
-                          variant={getEstadoVariant(entry.newState)}
-                          className="font-medium"
-                        >
-                          {formatStatus(entry.newState)}
-                        </Badge>
-                      </>
-                    ) : (
-                      <Badge
-                        variant={getEstadoVariant(entry.newState)}
-                        className="font-medium"
-                      >
-                        {formatStatus(entry.newState)}
-                      </Badge>
-                    )}
-                  </div>
+          const authorName =
+            `${entry.changedByFirstName || ""} ${entry.changedByLastName || ""}`.trim() ||
+            entry.changedByEmail ||
+            "Usuario del sistema"
 
-                  <div className="text-muted-foreground flex items-center gap-4 text-xs">
-                    <div className="flex items-center gap-1">
-                      <User className="h-3.5 w-3.5" />
-                      {entry.changedBy.name}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5" />
-                      {new Date(entry.changedAt).toLocaleString("es-ES", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+          return (
+            <div key={entry.id} className="relative">
+              {/* Punto en la línea de tiempo */}
+              <span className="bg-primary ring-background absolute top-1.5 -left-[31px] size-3 rounded-full ring-4" />
+
+              <Card className="shadow-xs transition-shadow hover:shadow-sm">
+                <CardHeader className="space-y-3 py-3.5">
+                  <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+                    <CardTitle className="text-sm font-semibold">
+                      {isInitial
+                        ? "Creación del proyecto"
+                        : "Transición de estado"}
+                    </CardTitle>
+
+                    <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                      <ClockIcon className="size-3.5" />
+                      <span>
+                        {new Date(entry.changedAt).toLocaleString("es-ES", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
                     </div>
                   </div>
-                </div>
-              </CardHeader>
-            </Card>
-          </div>
-        ))}
+
+                  <div className="flex flex-col justify-between gap-3 pt-1 sm:flex-row sm:items-center">
+                    {/* Estados */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {isInitial ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground text-xs">
+                            Estado inicial:
+                          </span>
+                          <Badge variant={PROJECT_STATUS_VARIANTS[nextStatus]}>
+                            {PROJECT_STATUS_LABELS[nextStatus]}
+                          </Badge>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          {prevStatus ? (
+                            <Badge
+                              variant={PROJECT_STATUS_VARIANTS[prevStatus]}
+                            >
+                              {PROJECT_STATUS_LABELS[prevStatus]}
+                            </Badge>
+                          ) : null}
+                          <ArrowRightIcon className="text-muted-foreground size-3.5" />
+                          <Badge variant={PROJECT_STATUS_VARIANTS[nextStatus]}>
+                            {PROJECT_STATUS_LABELS[nextStatus]}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Autor */}
+                    <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                      <div className="bg-muted flex size-6 items-center justify-center rounded-full">
+                        <UserIcon className="text-muted-foreground size-3.5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-foreground font-medium">
+                          {authorName}
+                        </span>
+                        {entry.changedByEmail &&
+                        entry.changedByEmail !== authorName ? (
+                          <span className="text-muted-foreground text-[11px]">
+                            {entry.changedByEmail}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
