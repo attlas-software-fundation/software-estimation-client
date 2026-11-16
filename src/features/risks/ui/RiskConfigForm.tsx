@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { RiskLevelSelector } from '@/features/ui/RiskLevelSelector';
+// Usamos ruta relativa para evitar fallos de alias en Vercel
+import { RiskLevelSelector } from './RiskLevelSelector'; 
 import { getRiskConfig, updateRiskConfig } from '../services/risk-config.service';
 import { RiskConfig } from '../types/risk-config.types';
 import { riskConfigSchema } from '../schemas/risk.schema';
@@ -24,7 +25,8 @@ export default function RiskConfigForm() {
     const validation = riskConfigSchema.safeParse(config);
     
     if (!validation.success) {
-      setErrorMsg(validation.error.errors[0].message);
+      // CORRECCIÓN: Usamos .issues en lugar de .errors para evitar fallos en Vercel
+      setErrorMsg(validation.error.issues[0].message);
       return;
     }
     setErrorMsg(null);
