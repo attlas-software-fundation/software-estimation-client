@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node --require ./scripts/load-dev-env.cjs ./node_modules/next/dist/bin/next dev",
+    "dev": "next dev",
     "build": "next build",
     "build:prod": "node --env-file=.env.prod ./node_modules/next/dist/bin/next build",
     "start": "next start",
