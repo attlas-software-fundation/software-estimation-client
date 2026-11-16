@@ -7,12 +7,26 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { formatDate } from "@/lib/format"
+import {
+  PROJECT_STATUS_LABELS,
+  type ProjectStatus,
+} from "../types/project-status"
 import type { ProjectFilters } from "../types/project-types"
+
+const TIPO_LABELS: Record<string, string> = {
+  monitoreo: "Monitoreo IoT",
+  automatizacion: "Automatización IoT",
+  telemetria: "Telemetría IoT",
+  control_supervision: "Control y supervisión IoT",
+  mantenimiento_predictivo: "Mantenimiento predictivo IoT",
+  integracion: "Integración IoT",
+}
 
 type ProjectToolbarProps = {
   search: string
   activeFilters: number
   filters: ProjectFilters
+  responsibleLabel?: string
   onSearchChange: (search: string) => void
   onOpenFilters: () => void
   onRemoveFilter: (key: keyof ProjectFilters) => void
@@ -23,6 +37,7 @@ export const ProjectToolbar = ({
   search,
   activeFilters,
   filters,
+  responsibleLabel,
   onSearchChange,
   onOpenFilters,
   onRemoveFilter,
@@ -82,7 +97,7 @@ export const ProjectToolbar = ({
               variant="outline"
               className="gap-1 border-blue-200 bg-blue-50 px-2 py-1 text-blue-700"
             >
-              Tipo: {filters.tipo}
+              Tipo: {TIPO_LABELS[filters.tipo] ?? filters.tipo}
               <button
                 onClick={() => onRemoveFilter("tipo")}
                 className="text-blue-700 hover:text-blue-900"
@@ -96,7 +111,7 @@ export const ProjectToolbar = ({
               variant="outline"
               className="gap-1 border-purple-200 bg-purple-50 px-2 py-1 text-purple-700"
             >
-              Responsable: {filters.responsable}
+              Responsable: {responsibleLabel ?? filters.responsable}
               <button
                 onClick={() => onRemoveFilter("responsable")}
                 className="text-purple-700 hover:text-purple-900"
@@ -110,7 +125,9 @@ export const ProjectToolbar = ({
               variant="outline"
               className="gap-1 border-amber-200 bg-amber-50 px-2 py-1 text-amber-700"
             >
-              Estado: {filters.estado}
+              Estado:{" "}
+              {PROJECT_STATUS_LABELS[filters.estado as ProjectStatus] ??
+                filters.estado}
               <button
                 onClick={() => onRemoveFilter("estado")}
                 className="text-amber-700 hover:text-amber-900"

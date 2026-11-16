@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils"
 import { formatDate } from "@/lib/format"
 import type { Project } from "../types/project-types"
 import { ProjectDeleteDialog } from "./project-delete-dialog"
+import { ProjectStatusDialog } from "./project-status-dialog"
+import { ProjectHistoryDialog } from "./project-history-dialog"
 import { ProjectsRowActions } from "./projects-row-actions"
 
 interface ProjectsTableProps {
@@ -89,6 +91,9 @@ const getEstadoInfo = (estado: string) => {
 
 export const ProjectsTable = ({ projects }: ProjectsTableProps) => {
   const [deletingProject, setDeletingProject] = useState<Project | null>(null)
+  const [transitioningProject, setTransitioningProject] =
+    useState<Project | null>(null)
+  const [historyProject, setHistoryProject] = useState<Project | null>(null)
 
   return (
     <Table>
@@ -155,6 +160,8 @@ export const ProjectsTable = ({ projects }: ProjectsTableProps) => {
                 <ProjectsRowActions
                   project={project}
                   onDelete={setDeletingProject}
+                  onChangeStatus={setTransitioningProject}
+                  onViewHistory={setHistoryProject}
                 />
               </TableCell>
             </TableRow>
@@ -163,10 +170,23 @@ export const ProjectsTable = ({ projects }: ProjectsTableProps) => {
       </TableBody>
       <ProjectDeleteDialog
         isOpen={deletingProject !== null}
-        projectId={deletingProject ? deletingProject.id : ""}
-        projectName={deletingProject ? deletingProject.nombre : ""}
+        project={deletingProject}
         onClose={() => setDeletingProject(null)}
         onSuccess={() => setDeletingProject(null)}
+      />
+      <ProjectStatusDialog
+        open={transitioningProject !== null}
+        project={transitioningProject}
+        onOpenChange={(open) => {
+          if (!open) setTransitioningProject(null)
+        }}
+      />
+      <ProjectHistoryDialog
+        open={historyProject !== null}
+        project={historyProject}
+        onOpenChange={(open) => {
+          if (!open) setHistoryProject(null)
+        }}
       />
     </Table>
   )

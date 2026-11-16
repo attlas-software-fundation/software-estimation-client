@@ -2,7 +2,9 @@
 
 import Link from "next/link"
 import {
+  ArrowRightLeftIcon,
   FolderKanbanIcon,
+  HistoryIcon,
   MoreHorizontalIcon,
   PencilIcon,
   TrashIcon,
@@ -20,22 +22,20 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import type { Project } from "../types/project-types"
-import { useProjectAccess } from "../hooks/use-project-access"
 
 type ProjectsRowActionsProps = {
   project: Project
   onDelete: (project: Project) => void
+  onChangeStatus?: (project: Project) => void
+  onViewHistory?: (project: Project) => void
 }
 
 export const ProjectsRowActions = ({
   project,
   onDelete,
+  onChangeStatus,
+  onViewHistory,
 }: ProjectsRowActionsProps) => {
-  const access = useProjectAccess(project.id)
-  const deleteLabel = access.canDeleteProject
-    ? "Eliminar"
-    : "No se puede eliminar en este estado"
-
   return (
     <div className="flex items-center justify-end gap-1">
       <Tooltip>
@@ -93,19 +93,37 @@ export const ProjectsRowActions = ({
           <TooltipContent>Más acciones</TooltipContent>
         </Tooltip>
         <DropdownMenuContent align="end" className="min-w-48">
+          {onChangeStatus ? (
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                onChangeStatus(project)
+              }}
+            >
+              <ArrowRightLeftIcon />
+              Cambiar estado
+            </DropdownMenuItem>
+          ) : null}
+          {onViewHistory ? (
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                onViewHistory(project)
+              }}
+            >
+              <HistoryIcon />
+              Historial de estados
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem
             variant="destructive"
-            disabled={!access.canDeleteProject}
             onClick={(e) => {
               e.stopPropagation()
-              if (!access.canDeleteProject) {
-                return
-              }
               onDelete(project)
             }}
           >
             <TrashIcon />
-            {deleteLabel}
+            Eliminar
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

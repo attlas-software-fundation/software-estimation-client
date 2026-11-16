@@ -84,8 +84,26 @@ export const PROJECT_STATUS_VARIANTS = {
   [ProjectStatusEnum.COMPLETED.value]: ProjectStatusEnum.COMPLETED.variant,
 } as const satisfies Record<ProjectStatus, ProjectStatusBadgeVariant>
 
+export const ProjectStatusApiMap: Record<string, ProjectStatus> = {
+  DRAFT: "borrador",
+  UNDER_REVIEW: "en_evaluacion",
+  ESTIMATED: "estimado",
+  APPROVED: "aprobado",
+  REJECTED: "rechazado",
+  IN_PROGRESS: "en_ejecucion",
+  COMPLETED: "finalizado",
+}
+
 export const isProjectStatus = (value: string): value is ProjectStatus =>
   PROJECT_STATUSES.some((status) => status === value)
 
-export const toProjectStatus = (value: string): ProjectStatus =>
-  isProjectStatus(value) ? value : ProjectStatusEnum.DRAFT.value
+export const toProjectStatus = (value: string): ProjectStatus => {
+  if (isProjectStatus(value)) {
+    return value
+  }
+  const fromApi = ProjectStatusApiMap[(value || "").toUpperCase()]
+  if (fromApi) {
+    return fromApi
+  }
+  return ProjectStatusEnum.DRAFT.value
+}

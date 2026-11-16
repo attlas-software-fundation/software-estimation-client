@@ -45,43 +45,48 @@ import { projectSchema } from "../schemas/project-schema"
 import { useProjectAccess } from "../hooks/use-project-access"
 import { useProjects } from "../hooks/use-projects"
 import { isProjectStatus } from "../types/project-status"
+import {
+  projectStatusFromApi,
+  projectStatusToApi,
+  projectTypeToApi,
+} from "../types/project-response"
 import { useUsers } from "@/features/users/hooks/use-users"
 import { getFullName } from "@/features/auth/types"
 import type { Project } from "../types/project-types"
 
 const TIPOS_PROYECTO = [
   {
-    value: "monitoreo",
+    value: "MONITORING",
     label: "Monitoreo IoT",
     icon: Cpu,
     color: "text-blue-500",
   },
   {
-    value: "automatizacion",
+    value: "AUTOMATION",
     label: "Automatización IoT",
     icon: Bot,
     color: "text-emerald-500",
   },
   {
-    value: "telemetria",
+    value: "TELEMETRY",
     label: "Telemetría IoT",
     icon: Activity,
     color: "text-amber-500",
   },
   {
-    value: "control_supervision",
+    value: "CONTROL_SUPERVISION",
     label: "Control y supervisión IoT",
     icon: Sliders,
     color: "text-purple-500",
   },
   {
-    value: "mantenimiento_predictivo",
+    value: "PREDICTIVE_MAINTENANCE",
     label: "Mantenimiento predictivo IoT",
     icon: TrendingUp,
     color: "text-rose-500",
   },
   {
-    value: "integracion",
+    value: "INTEGRATION",
     label: "Integración IoT",
     icon: Layers,
     color: "text-cyan-500",
@@ -90,43 +95,43 @@ const TIPOS_PROYECTO = [
 
 const ESTADOS_PROYECTO = [
   {
-    value: "borrador",
+    value: "DRAFT",
     label: "Borrador",
     icon: FileText,
     color: "text-muted-foreground",
   },
   {
-    value: "en_evaluacion",
+    value: "UNDER_REVIEW",
     label: "En evaluación",
     icon: Eye,
     color: "text-amber-500",
   },
   {
-    value: "estimado",
+    value: "ESTIMATED",
     label: "Estimado",
     icon: Calculator,
     color: "text-blue-500",
   },
   {
-    value: "aprobado",
+    value: "APPROVED",
     label: "Aprobado",
     icon: CheckCircle,
     color: "text-emerald-500",
   },
   {
-    value: "rechazado",
+    value: "REJECTED",
     label: "Rechazado",
     icon: XCircle,
     color: "text-red-500",
   },
   {
-    value: "en_ejecucion",
+    value: "IN_PROGRESS",
     label: "En ejecución",
     icon: PlayCircle,
     color: "text-cyan-500",
   },
   {
-    value: "finalizado",
+    value: "COMPLETED",
     label: "Finalizado",
     icon: Flag,
     color: "text-purple-500",
@@ -139,21 +144,39 @@ type ProjectFormProps = {
 
 export const ProjectForm = ({ project }: ProjectFormProps) => {
   const router = useRouter()
-  const { createProject, updateProject, isCreating, isUpdating } = useProjects()
+  const {
+    createProject,
+    updateProject,
+    updateProjectStatus,
+    isCreating,
+    isUpdating,
+    isUpdatingStatus,
+  } = useProjects()
   const access = useProjectAccess(project ? project.id : "")
   const fieldsLocked = Boolean(project) && !access.canEditGeneral
   const canChangeStatus = access.allowedTransitions.length > 0
   const canSave = !project || access.canEditGeneral || canChangeStatus
+
+  const currentStatusApi = project
+    ? (projectStatusToApi[project.status] ??
+      projectStatusToApi[project.estado] ??
+      project.status ??
+      project.estado ??
+      "DRAFT")
+    : "DRAFT"
+
   const statusOptions = ESTADOS_PROYECTO.filter((item) => {
     if (!project) {
-      return item.value === "borrador"
+      return item.value === "DRAFT"
     }
-    if (item.value === project.estado) {
+    if (item.value === currentStatusApi) {
       return true
     }
+    const spanishStatus =
+      projectStatusFromApi[item.value] ?? item.value.toLowerCase()
     return (
-      isProjectStatus(item.value) &&
-      access.allowedTransitions.includes(item.value)
+      isProjectStatus(spanishStatus) &&
+      access.allowedTransitions.includes(spanishStatus)
     )
   })
   const { data: usersData } = useUsers({
@@ -167,21 +190,37 @@ export const ProjectForm = ({ project }: ProjectFormProps) => {
   })
 
   const isEditing = Boolean(project)
-  const isPending = isCreating || isUpdating
+  const isPending = isCreating || isUpdating || isUpdatingStatus
 
   const form = useForm({
     defaultValues: {
-      nombre: project ? project.nombre : "",
-      descripcion: project ? project.descripcion : "",
-      tipo: project ? project.tipo : "",
-      fecha_inicio: project
-        ? new Date(project.fecha_inicio)
+      name: project ? project.name || project.nombre || "" : "",
+      description: project
+        ? (project.description ?? project.descripcion ?? "")
+        : "",
+      type: project
+        ? (projectTypeToApi[project.type] ??
+          projectTypeToApi[project.tipo] ??
+          project.type ??
+          project.tipo ??
+          "MONITORING")
+        : "",
+      startDate: project
+        ? new Date(project.startDate || project.fecha_inicio)
         : (undefined as Date | undefined),
-      fecha_fin: project
-        ? new Date(project.fecha_fin)
+      plannedDate: project
+        ? new Date(project.plannedDate || project.fecha_fin)
         : (undefined as Date | undefined),
-      responsable: project ? project.responsable : "",
-      estado: project ? project.estado : "borrador",
+      responsibleId: project
+        ? project.responsibleId || project.responsable || ""
+        : "",
+      status: project
+        ? (projectStatusToApi[project.status] ??
+          projectStatusToApi[project.estado] ??
+          project.status ??
+          project.estado ??
+          "DRAFT")
+        : "DRAFT",
     },
     validators: {
       onSubmit: projectSchema,
@@ -189,20 +228,56 @@ export const ProjectForm = ({ project }: ProjectFormProps) => {
     onSubmit: async ({ value }) => {
       try {
         if (project) {
-          await updateProject({
-            id: project.id,
-            data: { ...value, estado: value.estado },
-          })
+          const currentApiStatus =
+            projectStatusToApi[project.status] ??
+            projectStatusToApi[project.estado] ??
+            project.status ??
+            project.estado ??
+            "DRAFT"
+          const nextStatusApi = projectStatusToApi[value.status] ?? value.status
+
+          const statusChanged = nextStatusApi !== currentApiStatus
+
+          // PUT /api/v1/projects/{id}: solo permitido cuando canEditGeneral (estado DRAFT o REJECTED)
+          if (access.canEditGeneral) {
+            await updateProject({
+              id: project.id,
+              data: {
+                name: value.name,
+                description: value.description,
+                type: value.type,
+                startDate:
+                  value.startDate instanceof Date
+                    ? value.startDate.toISOString().split("T")[0]
+                    : String(value.startDate ?? ""),
+                plannedDate:
+                  value.plannedDate instanceof Date
+                    ? value.plannedDate.toISOString().split("T")[0]
+                    : String(value.plannedDate ?? ""),
+                responsibleId: value.responsibleId,
+              },
+            })
+          }
+
+          // PATCH /api/v1/projects/{id}/status: si el estado cambió
+          if (statusChanged) {
+            await updateProjectStatus({
+              id: project.id,
+              status: nextStatusApi,
+              estado: nextStatusApi,
+            })
+          }
+
           toast.add({
             title: "Proyecto actualizado",
-            description: `Los datos de ${value.nombre} se guardaron correctamente.`,
+            description: `Los datos de ${value.name} se guardaron correctamente.`,
             type: "success",
           })
         } else {
           await createProject(value)
           toast.add({
             title: "Proyecto creado",
-            description: `${value.nombre} se registró correctamente.`,
+            description: `${value.name} se registró correctamente en estado Borrador.`,
             type: "success",
           })
         }
@@ -228,7 +303,7 @@ export const ProjectForm = ({ project }: ProjectFormProps) => {
     >
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
         {/* Row 1 - Col 1: Nombre */}
-        <form.Field name="nombre">
+        <form.Field name="name">
           {(field) => (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor={field.name}>
@@ -254,7 +329,7 @@ export const ProjectForm = ({ project }: ProjectFormProps) => {
         </form.Field>
 
         {/* Row 1 - Col 2: Tipo */}
-        <form.Field name="tipo">
+        <form.Field name="type">
           {(field) => (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor={field.name}>
@@ -269,7 +344,9 @@ export const ProjectForm = ({ project }: ProjectFormProps) => {
                   {field.state.value ? (
                     (() => {
                       const selected = TIPOS_PROYECTO.find(
-                        (t) => t.value === field.state.value
+                        (t) =>
+                          t.value === field.state.value ||
+                          projectTypeToApi[field.state.value] === t.value
                       )
                       return selected ? (
                         <div className="flex items-center gap-2">
@@ -307,7 +384,7 @@ export const ProjectForm = ({ project }: ProjectFormProps) => {
         </form.Field>
 
         {/* Row 1 - Col 3: Responsable */}
-        <form.Field name="responsable">
+        <form.Field name="responsibleId">
           {(field) => (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor={field.name}>
@@ -323,7 +400,7 @@ export const ProjectForm = ({ project }: ProjectFormProps) => {
                   {field.state.value ? (
                     (() => {
                       const selected = usersData?.userResponse.find(
-                        (user) => getFullName(user) === field.state.value
+                        (user) => user.id === field.state.value
                       )
                       return selected ? (
                         <div className="flex items-center gap-2">
@@ -342,7 +419,7 @@ export const ProjectForm = ({ project }: ProjectFormProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   {usersData?.userResponse.map((user) => (
-                    <SelectItem key={user.id} value={getFullName(user)}>
+                    <SelectItem key={user.id} value={user.id}>
                       <div className="flex items-center gap-2">
                         <UserRound className="text-muted-foreground h-4 w-4" />
                         <span>
@@ -363,7 +440,7 @@ export const ProjectForm = ({ project }: ProjectFormProps) => {
         </form.Field>
 
         {/* Row 2 - Col 1: Fecha prevista de inicio */}
-        <form.Field name="fecha_inicio">
+        <form.Field name="startDate">
           {(startField) => (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor={startField.name}>
@@ -374,7 +451,7 @@ export const ProjectForm = ({ project }: ProjectFormProps) => {
                 id={startField.name}
                 value={startField.state.value}
                 disabled={fieldsLocked}
-                maxDate={form.getFieldValue("fecha_fin")}
+                maxDate={form.getFieldValue("plannedDate")}
                 invalid={Boolean(getFieldError(startField.state.meta.errors))}
                 placeholder="Selecciona fecha de inicio"
                 onSelect={startField.handleChange}
@@ -389,7 +466,7 @@ export const ProjectForm = ({ project }: ProjectFormProps) => {
         </form.Field>
 
         {/* Row 2 - Col 2: Fecha prevista de entrega */}
-        <form.Field name="fecha_fin">
+        <form.Field name="plannedDate">
           {(endField) => (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor={endField.name}>
@@ -400,7 +477,7 @@ export const ProjectForm = ({ project }: ProjectFormProps) => {
                 id={endField.name}
                 value={endField.state.value}
                 disabled={fieldsLocked}
-                minDate={form.getFieldValue("fecha_inicio")}
+                minDate={form.getFieldValue("startDate")}
                 invalid={Boolean(getFieldError(endField.state.meta.errors))}
                 placeholder="Selecciona fecha de entrega"
                 onSelect={endField.handleChange}
@@ -416,7 +493,7 @@ export const ProjectForm = ({ project }: ProjectFormProps) => {
 
         {/* Row 2 - Col 3: Estado del proyecto */}
         {isEditing ? (
-          <form.Field name="estado">
+          <form.Field name="status">
             {(field) => (
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor={field.name}>
@@ -432,7 +509,9 @@ export const ProjectForm = ({ project }: ProjectFormProps) => {
                     {field.state.value ? (
                       (() => {
                         const selected = ESTADOS_PROYECTO.find(
-                          (e) => e.value === field.state.value
+                          (e) =>
+                            e.value === field.state.value ||
+                            projectStatusToApi[field.state.value] === e.value
                         )
                         return selected ? (
                           <div className="flex items-center gap-2">
@@ -483,10 +562,10 @@ export const ProjectForm = ({ project }: ProjectFormProps) => {
         {/* Row 3 - Full Width: Descripción */}
         <div className="col-span-1 md:col-span-2 lg:col-span-3">
           <form.Field
-            name="descripcion"
+            name="description"
             validators={{
-              onChange: projectSchema.shape.descripcion,
-              onBlur: projectSchema.shape.descripcion,
+              onChange: projectSchema.shape.description,
+              onBlur: projectSchema.shape.description,
             }}
           >
             {(field) => {
