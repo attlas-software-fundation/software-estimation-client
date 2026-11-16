@@ -10,3 +10,13 @@ export const getRiskConfig = async (): Promise<RiskConfig> => {
   if (!response.ok) throw new Error('Error al obtener la configuración de riesgo');
   return response.json();
 };
+
+export const updateRiskConfig = async (data: RiskConfig): Promise<RiskConfig> => {
+  const response = await fetch(`${API_URL}/risk-config`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error('Error al actualizar la configuración de riesgo');
+  return response.json();
+};
