@@ -2,6 +2,7 @@
 
 import { useForm } from "@tanstack/react-form"
 import { SaveIcon, XIcon } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { FormSubmitButton } from "@/components/ui/form-submit-button"
@@ -18,7 +19,9 @@ import {
 import { toast } from "@/components/ui/toast"
 import { getErrorMessage, getFieldError } from "@/lib/form-errors"
 import {
+  createProfileRequestSchema,
   profileSchema,
+  updateProfileRequestSchema,
   type ProfileFormValues,
 } from "../schemas/profile-schema"
 import { useCreateProfile, useUpdateProfile } from "../hooks"
@@ -58,9 +61,10 @@ export const ProfileForm = ({
     onSubmit: async ({ value }) => {
       try {
         if (isEditing && profile) {
+          const body = updateProfileRequestSchema.parse(value)
           await updateProfileMutation.mutateAsync({
             id: profile.id,
-            ...value,
+            ...body,
           })
           toast.add({
             title: "Perfil actualizado",
@@ -68,7 +72,8 @@ export const ProfileForm = ({
             type: "success",
           })
         } else {
-          await createProfileMutation.mutateAsync(value)
+          const body = createProfileRequestSchema.parse(value)
+          await createProfileMutation.mutateAsync(body)
           toast.add({
             title: "Perfil creado",
             description: `${value.name} se registró correctamente.`,
@@ -88,6 +93,7 @@ export const ProfileForm = ({
 
   const isSubmitting =
     createProfileMutation.isPending || updateProfileMutation.isPending
+  const submitError = createProfileMutation.error || updateProfileMutation.error
 
   return (
     <form
@@ -98,6 +104,12 @@ export const ProfileForm = ({
       }}
       className="space-y-4"
     >
+      {submitError && (
+        <Alert variant="destructive">
+          <AlertTitle>Error al guardar perfil</AlertTitle>
+          <AlertDescription>{submitError.message}</AlertDescription>
+        </Alert>
+      )}
       <form.Field
         name="name"
         validators={{

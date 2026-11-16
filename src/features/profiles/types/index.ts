@@ -17,4 +17,22 @@ export type {
   Profile,
   UpdateProfilePayload,
 } from "./profile"
+export type { CreateTechnicalProfileRequest } from "./create-profile-request"
+export type { UpdateTechnicalProfileRequest } from "./update-profile-request"
+export type { UpdateCerRequest } from "./update-cer-request"
+export type {
+  ToggleProfileStatusPayload,
+  ToggleProfileStatusRequest,
+} from "./toggle-profile-status-request"
 export type { UpdateProfileStatus } from "./update-profile-status"
+export type { ProfileSearchResponse } from "./profile-search-response"
+export {
+  type TechnicalProfileApiExperienceLevel,
+  type TechnicalProfileApiRole,
+  type TechnicalProfileResponse,
+  experienceLevelFromApi,
+  experienceLevelToApi,
+  technicalRoleFromApi,
+  technicalRoleToApi,
+  toProfile,
+} from "./technical-profile-response"

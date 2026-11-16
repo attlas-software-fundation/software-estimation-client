@@ -1,5 +1,6 @@
 import type { CurrencyCode } from "@/lib/format"
 import type { ExperienceLevelValue, TechnicalRoleValue } from "@/enumeration"
+import type { UpdateTechnicalProfileRequest } from "./update-profile-request"
 
 export type Profile = {
   id: string
@@ -24,6 +25,6 @@ export type CreateProfilePayload = {
   isActive: boolean
 }
 
-export type UpdateProfilePayload = Partial<CreateProfilePayload> & {
+export interface UpdateProfilePayload extends UpdateTechnicalProfileRequest {
   id: string
 }
