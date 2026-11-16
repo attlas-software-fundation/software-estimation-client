@@ -8,9 +8,9 @@ import type {
   Profile,
   ProfileSearchResponse,
   TechnicalProfileResponse,
+  ToggleProfileStatusPayload,
   UpdateCerRequest,
   UpdateProfilePayload,
-  UpdateProfileStatus,
 } from "../types"
 import { experienceLevelToApi, technicalRoleToApi, toProfile } from "../types"
 
@@ -152,21 +152,19 @@ const updateProfile = async (
   return updated
 }
 
-const deleteProfile = async (id: string): Promise<{ success: boolean }> => {
-  await delay(SIMULATED_DELAY_MS)
-  const profiles = getStoredProfiles()
-  const filtered = profiles.filter((p) => p.id !== id)
-  saveStoredProfiles(filtered)
-  return { success: true }
+const deleteProfile = async (id: string): Promise<void> => {
+  await apiClient.delete(`/api/v1/profiles/${id}`)
 }
 
-const updateProfileStatus = async (
-  input: UpdateProfileStatus
-): Promise<Profile> => {
-  return updateProfile({
-    id: input.id,
-    isActive: input.isActive,
-  })
+const updateProfileStatus = async ({
+  id,
+  isActive,
+}: ToggleProfileStatusPayload): Promise<Profile> => {
+  const response = await apiClient.patch<TechnicalProfileResponse>(
+    `/api/v1/profiles/${id}/status`,
+    { isActive }
+  )
+  return toProfile(response)
 }
 
 export const profilesService = {
