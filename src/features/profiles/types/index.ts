@@ -18,3 +18,14 @@ export type {
   UpdateProfilePayload,
 } from "./profile"
 export type { UpdateProfileStatus } from "./update-profile-status"
+export type { ProfileSearchResponse } from "./profile-search-response"
+export {
+  type TechnicalProfileApiExperienceLevel,
+  type TechnicalProfileApiRole,
+  type TechnicalProfileResponse,
+  experienceLevelFromApi,
+  experienceLevelToApi,
+  technicalRoleFromApi,
+  technicalRoleToApi,
+  toProfile,
+} from "./technical-profile-response"
