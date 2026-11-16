@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { FormSubmitButton } from "@/components/ui/form-submit-button"
 import { Label } from "@/components/ui/label"
@@ -25,7 +26,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/toast"
 import { getErrorMessage, getFieldError } from "@/lib/form-errors"
-import { useUpdateProfile } from "../hooks"
+import { useUpdateProfileCer } from "../hooks"
 import type { Profile } from "../types"
 
 const cerSchema = z.object({
@@ -46,7 +47,7 @@ export const AssignCerDialog = ({
   open,
   onOpenChange,
 }: AssignCerDialogProps) => {
-  const updateMutation = useUpdateProfile()
+  const updateCerMutation = useUpdateProfileCer()
 
   const form = useForm({
     defaultValues: {
@@ -56,7 +57,7 @@ export const AssignCerDialog = ({
     onSubmit: async ({ value }) => {
       if (!profile) return
       try {
-        await updateMutation.mutateAsync({
+        await updateCerMutation.mutateAsync({
           id: profile.id,
           hourlyRate: value.hourlyRate,
           currency: "PEN",
@@ -110,6 +111,14 @@ export const AssignCerDialog = ({
           }}
           className="space-y-4 pt-1"
         >
+          {updateCerMutation.error && (
+            <Alert variant="destructive">
+              <AlertTitle>Error al actualizar CER</AlertTitle>
+              <AlertDescription>
+                {updateCerMutation.error.message}
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <form.Field
               name="hourlyRate"
@@ -166,7 +175,7 @@ export const AssignCerDialog = ({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={updateMutation.isPending}
+              disabled={updateCerMutation.isPending}
             >
               <XIcon />
               Cancelar
@@ -174,7 +183,7 @@ export const AssignCerDialog = ({
             <FormSubmitButton
               form={form}
               schema={cerSchema}
-              isPending={updateMutation.isPending}
+              isPending={updateCerMutation.isPending}
             >
               {({ isBusy }) => (
                 <>

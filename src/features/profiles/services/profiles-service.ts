@@ -8,6 +8,7 @@ import type {
   Profile,
   ProfileSearchResponse,
   TechnicalProfileResponse,
+  UpdateCerRequest,
   UpdateProfilePayload,
   UpdateProfileStatus,
 } from "../types"
@@ -117,6 +118,20 @@ const createProfile = async (
   return toProfile(response)
 }
 
+const updateProfileCer = async (
+  id: string,
+  payload: UpdateCerRequest
+): Promise<Profile> => {
+  const response = await apiClient.patch<TechnicalProfileResponse>(
+    `/api/v1/profiles/${id}/cer`,
+    {
+      hourlyRate: payload.hourlyRate,
+      currency: payload.currency || "PEN",
+    }
+  )
+  return toProfile(response)
+}
+
 const updateProfile = async (
   payload: UpdateProfilePayload
 ): Promise<Profile> => {
@@ -160,6 +175,7 @@ export const profilesService = {
   getProfile,
   createProfile,
   updateProfile,
+  updateProfileCer,
   deleteProfile,
   updateProfileStatus,
 }
