@@ -1,7 +1,6 @@
 import { apiClient } from "@/lib/api"
 import type { PaginatedResponse, QueryRequest } from "@/types/api"
 import type {
-  CreateProfilePayload,
   CreateTechnicalProfileRequest,
   Profile,
   ProfileSearchResponse,
@@ -9,9 +8,8 @@ import type {
   ToggleProfileStatusPayload,
   UpdateCerRequest,
   UpdateProfilePayload,
-  UpdateTechnicalProfileRequest,
 } from "../types"
-import { experienceLevelToApi, technicalRoleToApi, toProfile } from "../types"
+import { technicalRoleToApi, toProfile } from "../types"
 
 const searchProfiles = (query?: QueryRequest) => {
   const transformedQuery: QueryRequest = query
@@ -94,40 +92,21 @@ const getProfile = async (id: string): Promise<Profile> => {
 }
 
 const createProfile = async (
-  payload: CreateProfilePayload
+  input: CreateTechnicalProfileRequest
 ): Promise<Profile> => {
-  const body: CreateTechnicalProfileRequest = {
-    name: payload.name.trim(),
-    email: payload.email.trim(),
-    role: technicalRoleToApi[payload.role] ?? "OTHER",
-    experienceLevel: experienceLevelToApi[payload.experienceLevel] ?? "MID",
-    hourlyRate: payload.hourlyRate,
-    currency: "PEN",
-    isActive: payload.isActive,
-  }
   const response = await apiClient.post<TechnicalProfileResponse>(
     "/api/v1/profiles",
-    body
+    input
   )
   return toProfile(response)
 }
 
-const updateProfile = async (
-  payload: UpdateProfilePayload
-): Promise<Profile> => {
-  const body: UpdateTechnicalProfileRequest = {
-    name: payload.name?.trim(),
-    email: payload.email?.trim(),
-    role: payload.role ? technicalRoleToApi[payload.role] : undefined,
-    experienceLevel: payload.experienceLevel
-      ? experienceLevelToApi[payload.experienceLevel]
-      : undefined,
-    hourlyRate: payload.hourlyRate,
-    currency: payload.currency || "PEN",
-    isActive: payload.isActive,
-  }
+const updateProfile = async ({
+  id,
+  ...body
+}: UpdateProfilePayload): Promise<Profile> => {
   const response = await apiClient.put<TechnicalProfileResponse>(
-    `/api/v1/profiles/${payload.id}`,
+    `/api/v1/profiles/${id}`,
     body
   )
   return toProfile(response)
@@ -139,10 +118,7 @@ const updateProfileCer = async (
 ): Promise<Profile> => {
   const response = await apiClient.patch<TechnicalProfileResponse>(
     `/api/v1/profiles/${id}/cer`,
-    {
-      hourlyRate: payload.hourlyRate,
-      currency: payload.currency || "PEN",
-    }
+    payload
   )
   return toProfile(response)
 }

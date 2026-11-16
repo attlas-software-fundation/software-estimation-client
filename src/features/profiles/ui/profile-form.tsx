@@ -19,7 +19,9 @@ import {
 import { toast } from "@/components/ui/toast"
 import { getErrorMessage, getFieldError } from "@/lib/form-errors"
 import {
+  createProfileRequestSchema,
   profileSchema,
+  updateProfileRequestSchema,
   type ProfileFormValues,
 } from "../schemas/profile-schema"
 import { useCreateProfile, useUpdateProfile } from "../hooks"
@@ -59,9 +61,10 @@ export const ProfileForm = ({
     onSubmit: async ({ value }) => {
       try {
         if (isEditing && profile) {
+          const body = updateProfileRequestSchema.parse(value)
           await updateProfileMutation.mutateAsync({
             id: profile.id,
-            ...value,
+            ...body,
           })
           toast.add({
             title: "Perfil actualizado",
@@ -69,7 +72,8 @@ export const ProfileForm = ({
             type: "success",
           })
         } else {
-          await createProfileMutation.mutateAsync(value)
+          const body = createProfileRequestSchema.parse(value)
+          await createProfileMutation.mutateAsync(body)
           toast.add({
             title: "Perfil creado",
             description: `${value.name} se registró correctamente.`,
