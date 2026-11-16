@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { invalidateReportQueries } from "@/features/reports/hooks/query-keys"
+import { invalidateProjectCosts } from "@/features/costs/hooks/query-keys"
 import { taskHoursService } from "../services/task-hours.service"
 import type { UpdateTaskHoursInput } from "../types"
 
@@ -27,10 +28,8 @@ export const useUpdateTaskHours = (projectId: string) => {
       queryClient.invalidateQueries({
         queryKey: ["sprint-calculation", projectId],
       })
-      queryClient.invalidateQueries({
-        queryKey: ["project-costs", projectId],
-      })
       invalidateReportQueries(queryClient)
+      return invalidateProjectCosts(queryClient, projectId)
     },
   })
 }

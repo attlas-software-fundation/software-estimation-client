@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { formatCurrency } from "@/lib/format"
+import { formatCostAmount } from "../utils/format-cost-amount"
 import { TableEmptyState } from "@/components/table-empty-state"
 import type { ProfileCostBreakdown } from "../types/profile-cost-breakdown"
 import { CostProfileIdentity } from "./cost-profile-identity"
@@ -31,7 +31,7 @@ export const ProfileCostBreakdownTable = ({
       <CardHeader>
         <CardTitle>Desglose por perfil técnico</CardTitle>
         <CardDescription>
-          Horas × CER horario. El CER sale del perfil técnico.
+          Subtotales consolidados por perfil y horas de sus contribuciones.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -41,13 +41,19 @@ export const ProfileCostBreakdownTable = ({
             icon={UserIcon}
           />
         ) : (
-          <Table>
+          <Table aria-label="Desglose de costos por perfil técnico">
             <TableHeader>
               <TableRow>
-                <TableHead>Perfil técnico</TableHead>
-                <TableHead className="text-right">Horas totales</TableHead>
-                <TableHead className="text-right">CER</TableHead>
-                <TableHead className="text-right">Costo total</TableHead>
+                <TableHead scope="col">Perfil técnico (ID)</TableHead>
+                <TableHead scope="col" className="text-right">
+                  Horas totales
+                </TableHead>
+                <TableHead scope="col" className="text-right">
+                  CER por hora
+                </TableHead>
+                <TableHead scope="col" className="text-right">
+                  Costo total
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -60,14 +66,16 @@ export const ProfileCostBreakdownTable = ({
                       email={profile.profileEmail}
                     />
                   </TableCell>
-                  <TableCell className="text-right">
-                    {profile.totalHours}
+                  <TableCell className="text-right tabular-nums">
+                    {profile.totalHours} h
                   </TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrency(profile.cer)}
+                  <TableCell className="text-right tabular-nums">
+                    {profile.cer === null
+                      ? "Variable por contribución"
+                      : `${formatCostAmount(profile.cer, profile.currency)} / h`}
                   </TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrency(profile.totalCost)}
+                  <TableCell className="text-right tabular-nums">
+                    {formatCostAmount(profile.totalCost, profile.currency)}
                   </TableCell>
                 </TableRow>
               ))}

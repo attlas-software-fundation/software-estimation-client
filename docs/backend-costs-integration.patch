@@ -1,0 +1,73 @@
+diff --git a/src/main/java/com/intecx/estimation/rest/TechnicalTaskController.java b/src/main/java/com/intecx/estimation/rest/TechnicalTaskController.java
+index 3eeb5b3..9266272 100644
+--- a/src/main/java/com/intecx/estimation/rest/TechnicalTaskController.java
++++ b/src/main/java/com/intecx/estimation/rest/TechnicalTaskController.java
+@@ -3,2 +3,2 @@ package com.intecx.estimation.rest;
+-import com.intecx.estimation.common.PaginatedResponse;
+-import com.intecx.estimation.common.QueryRequest;
++import com.intecx.inscope.common.PaginatedResponse;
++import com.intecx.inscope.common.QueryRequest;
+diff --git a/src/main/java/com/intecx/estimation/rest/UserStoryController.java b/src/main/java/com/intecx/estimation/rest/UserStoryController.java
+index 3a55b97..d49dea5 100644
+--- a/src/main/java/com/intecx/estimation/rest/UserStoryController.java
++++ b/src/main/java/com/intecx/estimation/rest/UserStoryController.java
+@@ -3,2 +3,2 @@ package com.intecx.estimation.rest;
+-import com.intecx.estimation.common.PaginatedResponse;
+-import com.intecx.estimation.common.QueryRequest;
++import com.intecx.inscope.common.PaginatedResponse;
++import com.intecx.inscope.common.QueryRequest;
+diff --git a/src/main/java/com/intecx/estimation/service/TechnicalTaskService.java b/src/main/java/com/intecx/estimation/service/TechnicalTaskService.java
+index 3867f74..52b867b 100644
+--- a/src/main/java/com/intecx/estimation/service/TechnicalTaskService.java
++++ b/src/main/java/com/intecx/estimation/service/TechnicalTaskService.java
+@@ -3,4 +3,4 @@ package com.intecx.estimation.service;
+-import com.intecx.estimation.common.PaginatedResponse;
+-import com.intecx.estimation.common.QueryFields;
+-import com.intecx.estimation.common.QueryRequest;
+-import com.intecx.estimation.common.QuerySupport;
++import com.intecx.inscope.common.PaginatedResponse;
++import com.intecx.inscope.common.QueryFields;
++import com.intecx.inscope.common.QueryRequest;
++import com.intecx.inscope.common.QuerySupport;
+@@ -12 +12 @@ import com.intecx.estimation.entity.TechnicalTask;
+-import com.intecx.estimation.exception.ResourceNotFoundException;
++import com.intecx.inscope.exception.ResourceNotFoundException;
+diff --git a/src/main/java/com/intecx/estimation/service/UserStoryService.java b/src/main/java/com/intecx/estimation/service/UserStoryService.java
+index 9df4462..11e5f3a 100644
+--- a/src/main/java/com/intecx/estimation/service/UserStoryService.java
++++ b/src/main/java/com/intecx/estimation/service/UserStoryService.java
+@@ -3,4 +3,4 @@ package com.intecx.estimation.service;
+-import com.intecx.estimation.common.PaginatedResponse;
+-import com.intecx.estimation.common.QueryFields;
+-import com.intecx.estimation.common.QueryRequest;
+-import com.intecx.estimation.common.QuerySupport;
++import com.intecx.inscope.common.PaginatedResponse;
++import com.intecx.inscope.common.QueryFields;
++import com.intecx.inscope.common.QueryRequest;
++import com.intecx.inscope.common.QuerySupport;
+@@ -11 +11 @@ import com.intecx.estimation.entity.UserStory;
+-import com.intecx.estimation.exception.ResourceNotFoundException;
++import com.intecx.inscope.exception.ResourceNotFoundException;
+diff --git a/src/test/java/com/intecx/estimation/service/TechnicalTaskServiceTest.java b/src/test/java/com/intecx/estimation/service/TechnicalTaskServiceTest.java
+index d0da509..4594a1d 100644
+--- a/src/test/java/com/intecx/estimation/service/TechnicalTaskServiceTest.java
++++ b/src/test/java/com/intecx/estimation/service/TechnicalTaskServiceTest.java
+@@ -13 +13 @@ import com.intecx.estimation.enumeration.TaskStatus;
+-import com.intecx.estimation.exception.ResourceNotFoundException;
++import com.intecx.inscope.exception.ResourceNotFoundException;
+diff --git a/src/test/java/com/intecx/estimation/service/UserStoryServiceTest.java b/src/test/java/com/intecx/estimation/service/UserStoryServiceTest.java
+index 635e753..cf8a674 100644
+--- a/src/test/java/com/intecx/estimation/service/UserStoryServiceTest.java
++++ b/src/test/java/com/intecx/estimation/service/UserStoryServiceTest.java
+@@ -14 +14 @@ import com.intecx.estimation.enumeration.UserStoryStatus;
+-import com.intecx.estimation.exception.ResourceNotFoundException;
++import com.intecx.inscope.exception.ResourceNotFoundException;
+diff --git a/src/test/java/com/intecx/inscope/service/impl/TechnicalProfileServiceImplTest.java b/src/test/java/com/intecx/inscope/service/impl/TechnicalProfileServiceImplTest.java
+index 4d48371..0b4bfb6 100644
+--- a/src/test/java/com/intecx/inscope/service/impl/TechnicalProfileServiceImplTest.java
++++ b/src/test/java/com/intecx/inscope/service/impl/TechnicalProfileServiceImplTest.java
+@@ -20,0 +21 @@ import com.intecx.inscope.enumeration.CurrencyCode;
++import com.intecx.inscope.enumeration.CurrencyCode;
+@@ -259 +260 @@ class TechnicalProfileServiceImplTest {
+-                .currency("PEN")
++                .currency(CurrencyCode.PEN)
