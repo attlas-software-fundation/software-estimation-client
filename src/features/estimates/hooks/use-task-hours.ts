@@ -1,35 +1,39 @@
-"use client"
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { invalidateReportQueries } from "@/features/reports/hooks/query-keys"
-import { invalidateProjectCosts } from "@/features/costs/hooks/query-keys"
-import { taskHoursService } from "../services/task-hours.service"
-import type { UpdateTaskHoursInput } from "../types"
-
-export const TASK_HOURS_QUERY_KEY = ["task-hours"]
+import {
+  taskHoursService,
+  UpdateTaskHoursRequest,
+} from "../services/task-hours.service"
 
 export const useTaskHours = (projectId: string) => {
-  return useQuery({
-    queryKey: [...TASK_HOURS_QUERY_KEY, projectId],
-    queryFn: () => taskHoursService.getTaskHourEntries(projectId),
-  })
-}
-
-export const useUpdateTaskHours = (projectId: string) => {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: (input: UpdateTaskHoursInput) =>
-      taskHoursService.updateTaskHours(projectId, input),
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["project-task-hours", projectId],
+    queryFn: () => taskHoursService.getTaskHourEntries(projectId),
+    enabled: !!projectId,
+  })
+
+  const updateHoursMutation = useMutation({
+    mutationFn: ({
+      taskId,
+      data,
+    }: {
+      taskId: string
+      data: UpdateTaskHoursRequest
+    }) => taskHoursService.updateTaskHours(projectId, taskId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [...TASK_HOURS_QUERY_KEY, projectId],
+        queryKey: ["project-task-hours", projectId],
       })
-      queryClient.invalidateQueries({
-        queryKey: ["sprint-calculation", projectId],
-      })
-      invalidateReportQueries(queryClient)
-      return invalidateProjectCosts(queryClient, projectId)
+      queryClient.invalidateQueries({ queryKey: ["project-costs", projectId] })
     },
   })
+
+  return {
+    data,
+    isLoading,
+    error,
+    updateTaskHours: updateHoursMutation.mutateAsync,
+    isUpdating: updateHoursMutation.isPending,
+  }
 }

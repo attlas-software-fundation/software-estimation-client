@@ -17,7 +17,7 @@ import {
 import { toast } from "@/components/ui/toast"
 import { getErrorMessage } from "@/lib/form-errors"
 import { TableEmptyState } from "@/components/table-empty-state"
-import { useTaskHours, useUpdateTaskHours } from "../hooks/use-task-hours"
+import { useTaskHours } from "../hooks/use-task-hours"
 import type { TaskHourEntry } from "../types"
 import { useProjectAccess } from "@/features/projects/hooks/use-project-access"
 
@@ -54,8 +54,9 @@ const groupByStory = (entries: TaskHourEntry[]): StoryGroup[] => {
 }
 
 export const TaskHoursTable = ({ projectId }: TaskHoursTableProps) => {
-  const { data: entries = [], isLoading } = useTaskHours(projectId)
-  const updateHours = useUpdateTaskHours(projectId)
+  const { data, isLoading, updateTaskHours, isUpdating } =
+    useTaskHours(projectId)
+  const entries: TaskHourEntry[] = Array.isArray(data) ? data : []
   const access = useProjectAccess(projectId)
   const canWrite = access.canEditEstimation
   const [editingId, setEditingId] = useState("")
@@ -71,20 +72,20 @@ export const TaskHoursTable = ({ projectId }: TaskHoursTableProps) => {
   const handleStartEdit = (entry: TaskHourEntry) => {
     setEditingId(entry.id)
     setEditHours(entry.estimatedHours)
-    setEditReason(entry.adjustmentReason)
+    setEditReason(entry.adjustmentReason || "")
   }
 
   const handleSave = async (entry: TaskHourEntry) => {
     try {
-      await updateHours.mutateAsync({
+      await updateTaskHours({
         taskId: entry.taskId,
-        profileId: entry.profileId,
-        hours: editHours,
-        adjustmentReason: editReason.trim(),
+        data: {
+          estimatedHours: editHours,
+        },
       })
       toast.add({
         title: "Horas actualizadas",
-        description: `${entry.taskTitle} se actualizó.`,
+        description: `${entry.taskTitle} se actualizó correctamente.`,
         type: "success",
       })
       setEditingId("")
@@ -164,7 +165,7 @@ export const TaskHoursTable = ({ projectId }: TaskHoursTableProps) => {
                               min={0}
                               max={9999}
                               step={0.5}
-                              disabled={updateHours.isPending}
+                              disabled={isUpdating}
                               invalid={false}
                               className="ml-auto w-28"
                               onBlur={() => undefined}
@@ -181,7 +182,7 @@ export const TaskHoursTable = ({ projectId }: TaskHoursTableProps) => {
                             <Input
                               value={editReason}
                               placeholder="Motivo del ajuste"
-                              disabled={updateHours.isPending}
+                              disabled={isUpdating}
                               onChange={(event) =>
                                 setEditReason(event.target.value)
                               }
@@ -190,7 +191,8 @@ export const TaskHoursTable = ({ projectId }: TaskHoursTableProps) => {
                             <span className="text-muted-foreground text-sm">
                               {entry.isAutomatic
                                 ? "Automático"
-                                : entry.adjustmentReason.length > 0
+                                : entry.adjustmentReason &&
+                                    entry.adjustmentReason.length > 0
                                   ? entry.adjustmentReason
                                   : "Ajuste manual"}
                             </span>
@@ -201,21 +203,22 @@ export const TaskHoursTable = ({ projectId }: TaskHoursTableProps) => {
                             <div className="flex items-center justify-end gap-1">
                               <Button
                                 type="button"
-                                size="icon-sm"
-                                disabled={updateHours.isPending}
+                                size="icon"
+                                variant="ghost"
+                                disabled={isUpdating}
                                 onClick={() => void handleSave(entry)}
                               >
-                                <CheckIcon />
+                                <CheckIcon className="h-4 w-4" />
                                 <span className="sr-only">Guardar</span>
                               </Button>
                               <Button
                                 type="button"
                                 variant="outline"
-                                size="icon-sm"
-                                disabled={updateHours.isPending}
+                                size="icon"
+                                disabled={isUpdating}
                                 onClick={() => setEditingId("")}
                               >
-                                <XIcon />
+                                <XIcon className="h-4 w-4" />
                                 <span className="sr-only">Cancelar</span>
                               </Button>
                             </div>
@@ -223,11 +226,11 @@ export const TaskHoursTable = ({ projectId }: TaskHoursTableProps) => {
                             <Button
                               type="button"
                               variant="ghost"
-                              size="icon-sm"
+                              size="icon"
                               disabled={!canWrite}
                               onClick={() => handleStartEdit(entry)}
                             >
-                              <PencilIcon />
+                              <PencilIcon className="h-4 w-4" />
                               <span className="sr-only">Ajustar horas</span>
                             </Button>
                           )}
