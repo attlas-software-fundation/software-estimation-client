@@ -2,6 +2,7 @@
 
 import { useForm } from "@tanstack/react-form"
 import { SaveIcon, XIcon } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { FormSubmitButton } from "@/components/ui/form-submit-button"
@@ -88,6 +89,7 @@ export const ProfileForm = ({
 
   const isSubmitting =
     createProfileMutation.isPending || updateProfileMutation.isPending
+  const submitError = createProfileMutation.error || updateProfileMutation.error
 
   return (
     <form
@@ -98,6 +100,12 @@ export const ProfileForm = ({
       }}
       className="space-y-4"
     >
+      {submitError && (
+        <Alert variant="destructive">
+          <AlertTitle>Error al guardar perfil</AlertTitle>
+          <AlertDescription>{submitError.message}</AlertDescription>
+        </Alert>
+      )}
       <form.Field
         name="name"
         validators={{

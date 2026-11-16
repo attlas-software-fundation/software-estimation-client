@@ -4,13 +4,14 @@ import { CURRENCY_CODE } from "@/lib/format"
 import { readJson, STORAGE_KEYS, writeJson } from "@/lib/storage"
 import type {
   CreateProfilePayload,
+  CreateTechnicalProfileRequest,
   Profile,
   ProfileSearchResponse,
   TechnicalProfileResponse,
   UpdateProfilePayload,
   UpdateProfileStatus,
 } from "../types"
-import { technicalRoleToApi, toProfile } from "../types"
+import { experienceLevelToApi, technicalRoleToApi, toProfile } from "../types"
 
 const PROFILES_STORAGE_KEY = STORAGE_KEYS.PROFILES
 const SIMULATED_DELAY_MS = 250
@@ -100,19 +101,20 @@ const getProfile = async (id: string): Promise<Profile> => {
 const createProfile = async (
   payload: CreateProfilePayload
 ): Promise<Profile> => {
-  await delay(SIMULATED_DELAY_MS)
-  const profiles = getStoredProfiles()
-  const now = new Date().toISOString()
-  const newProfile: Profile = {
-    ...payload,
-    currency: CURRENCY_CODE,
-    id: crypto.randomUUID(),
-    createdAt: now,
-    updatedAt: now,
+  const body: CreateTechnicalProfileRequest = {
+    name: payload.name.trim(),
+    email: payload.email.trim(),
+    role: technicalRoleToApi[payload.role] ?? "OTHER",
+    experienceLevel: experienceLevelToApi[payload.experienceLevel] ?? "MID",
+    hourlyRate: payload.hourlyRate,
+    currency: "PEN",
+    isActive: payload.isActive,
   }
-  profiles.unshift(newProfile)
-  saveStoredProfiles(profiles)
-  return newProfile
+  const response = await apiClient.post<TechnicalProfileResponse>(
+    "/api/v1/profiles",
+    body
+  )
+  return toProfile(response)
 }
 
 const updateProfile = async (

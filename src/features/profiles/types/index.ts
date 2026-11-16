@@ -17,6 +17,7 @@ export type {
   Profile,
   UpdateProfilePayload,
 } from "./profile"
+export type { CreateTechnicalProfileRequest } from "./create-profile-request"
 export type { UpdateProfileStatus } from "./update-profile-status"
 export type { ProfileSearchResponse } from "./profile-search-response"
 export {
