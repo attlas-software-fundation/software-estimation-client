@@ -1,4 +1,8 @@
-export { PROFILES_QUERY_KEY, useProfiles } from "./use-profiles"
+export {
+  PROFILES_QUERY_KEY,
+  useActiveProfiles,
+  useProfiles,
+} from "./use-profiles"
 export { useProfile } from "./use-profile"
 export { useCreateProfile } from "./use-create-profile"
 export { useUpdateProfile } from "./use-update-profile"

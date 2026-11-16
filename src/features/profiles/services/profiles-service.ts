@@ -1,7 +1,5 @@
 import { apiClient } from "@/lib/api"
 import type { PaginatedResponse, QueryRequest } from "@/types/api"
-import { CURRENCY_CODE } from "@/lib/format"
-import { readJson, STORAGE_KEYS, writeJson } from "@/lib/storage"
 import type {
   CreateProfilePayload,
   CreateTechnicalProfileRequest,
@@ -11,32 +9,9 @@ import type {
   ToggleProfileStatusPayload,
   UpdateCerRequest,
   UpdateProfilePayload,
+  UpdateTechnicalProfileRequest,
 } from "../types"
 import { experienceLevelToApi, technicalRoleToApi, toProfile } from "../types"
-
-const PROFILES_STORAGE_KEY = STORAGE_KEYS.PROFILES
-const SIMULATED_DELAY_MS = 250
-
-const delay = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms))
-
-const getStoredProfiles = (): Profile[] => {
-  const data = readJson<Profile[]>(PROFILES_STORAGE_KEY)
-  if (!Array.isArray(data)) {
-    return []
-  }
-  return data.map((profile) => ({
-    ...profile,
-    email: typeof profile.email === "string" ? profile.email : "",
-    hourlyRate: typeof profile.hourlyRate === "number" ? profile.hourlyRate : 0,
-    currency: CURRENCY_CODE,
-    isActive: profile.isActive === false ? false : true,
-  }))
-}
-
-const saveStoredProfiles = (profiles: Profile[]): void => {
-  writeJson(PROFILES_STORAGE_KEY, profiles)
-}
 
 const searchProfiles = (query?: QueryRequest) => {
   const transformedQuery: QueryRequest = query
@@ -89,14 +64,33 @@ const getProfiles = async (
   }
 }
 
+const getActiveProfiles = async (): Promise<Profile[]> => {
+  const response = await searchProfiles({
+    filters: [
+      {
+        key: "isActive",
+        operator: "EQ",
+        values: ["true"],
+      },
+    ],
+    pagination: {
+      pageNumber: 0,
+      pageSize: 100,
+      orderBy: "name",
+      sortDirection: "ASC",
+    },
+  })
+
+  const items =
+    response.technicalProfileResponse ?? response.profilesResponse ?? []
+  return items.map((item) => toProfile(item)).filter((p) => p.isActive)
+}
+
 const getProfile = async (id: string): Promise<Profile> => {
-  await delay(SIMULATED_DELAY_MS)
-  const profiles = getStoredProfiles()
-  const profile = profiles.find((p) => p.id === id)
-  if (!profile) {
-    throw new Error(`Perfil con ID "${id}" no encontrado.`)
-  }
-  return profile
+  const response = await apiClient.get<TechnicalProfileResponse>(
+    `/api/v1/profiles/${id}`
+  )
+  return toProfile(response)
 }
 
 const createProfile = async (
@@ -118,6 +112,27 @@ const createProfile = async (
   return toProfile(response)
 }
 
+const updateProfile = async (
+  payload: UpdateProfilePayload
+): Promise<Profile> => {
+  const body: UpdateTechnicalProfileRequest = {
+    name: payload.name?.trim(),
+    email: payload.email?.trim(),
+    role: payload.role ? technicalRoleToApi[payload.role] : undefined,
+    experienceLevel: payload.experienceLevel
+      ? experienceLevelToApi[payload.experienceLevel]
+      : undefined,
+    hourlyRate: payload.hourlyRate,
+    currency: payload.currency || "PEN",
+    isActive: payload.isActive,
+  }
+  const response = await apiClient.put<TechnicalProfileResponse>(
+    `/api/v1/profiles/${payload.id}`,
+    body
+  )
+  return toProfile(response)
+}
+
 const updateProfileCer = async (
   id: string,
   payload: UpdateCerRequest
@@ -130,26 +145,6 @@ const updateProfileCer = async (
     }
   )
   return toProfile(response)
-}
-
-const updateProfile = async (
-  payload: UpdateProfilePayload
-): Promise<Profile> => {
-  await delay(SIMULATED_DELAY_MS)
-  const profiles = getStoredProfiles()
-  const index = profiles.findIndex((p) => p.id === payload.id)
-  if (index === -1) {
-    throw new Error(`Perfil con ID "${payload.id}" no encontrado.`)
-  }
-  const updated: Profile = {
-    ...profiles[index],
-    ...payload,
-    currency: CURRENCY_CODE,
-    updatedAt: new Date().toISOString(),
-  }
-  profiles[index] = updated
-  saveStoredProfiles(profiles)
-  return updated
 }
 
 const deleteProfile = async (id: string): Promise<void> => {
@@ -170,6 +165,7 @@ const updateProfileStatus = async ({
 export const profilesService = {
   searchProfiles,
   getProfiles,
+  getActiveProfiles,
   getProfile,
   createProfile,
   updateProfile,

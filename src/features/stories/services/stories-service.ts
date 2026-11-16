@@ -121,35 +121,15 @@ const toQueryRequest = (filters: FilterRequest[]): QueryRequest => ({
 })
 
 const getProfiles = async (): Promise<TechnicalProfile[]> => {
-  const profiles: TechnicalProfile[] = []
-  let pageNumber = 0
-  let hasNext = true
-
-  while (hasNext) {
-    const page = await profilesService.getProfiles({
-      filters: [],
-      pagination: {
-        pageNumber,
-        pageSize: PAGE_SIZE,
-        orderBy: "createdAt",
-        sortDirection: "DESC",
-      },
-    })
-    page.profilesResponse.forEach((profile) => {
-      profiles.push({
-        id: profile.id,
-        name: profile.name,
-        role: profile.role,
-        email: typeof profile.email === "string" ? profile.email : "",
-        hourlyRate: profile.hourlyRate,
-        isActive: profile.isActive !== false,
-      })
-    })
-    hasNext = page.hasNext
-    pageNumber += 1
-  }
-
-  return profiles
+  const activeProfiles = await profilesService.getActiveProfiles()
+  return activeProfiles.map((profile) => ({
+    id: profile.id,
+    name: profile.name,
+    role: profile.role,
+    email: profile.email,
+    hourlyRate: profile.hourlyRate,
+    isActive: profile.isActive,
+  }))
 }
 
 const storyFilters = (

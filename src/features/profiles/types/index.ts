@@ -18,6 +18,7 @@ export type {
   UpdateProfilePayload,
 } from "./profile"
 export type { CreateTechnicalProfileRequest } from "./create-profile-request"
+export type { UpdateTechnicalProfileRequest } from "./update-profile-request"
 export type { UpdateCerRequest } from "./update-cer-request"
 export type {
   ToggleProfileStatusPayload,

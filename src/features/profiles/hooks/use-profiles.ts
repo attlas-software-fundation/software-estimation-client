@@ -10,3 +10,10 @@ export const useProfiles = (query?: QueryRequest) => {
     queryFn: () => profilesService.getProfiles(query),
   })
 }
+
+export const useActiveProfiles = () => {
+  return useQuery({
+    queryKey: [...PROFILES_QUERY_KEY, "active"],
+    queryFn: () => profilesService.getActiveProfiles(),
+  })
+}

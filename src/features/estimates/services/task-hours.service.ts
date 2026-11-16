@@ -64,27 +64,7 @@ const splitHours = (total: number, count: number): number[] => {
 }
 
 const listActiveProfiles = async (): Promise<Profile[]> => {
-  const collected: Profile[] = []
-  let pageNumber = 0
-  let hasNext = true
-
-  while (hasNext) {
-    const query: QueryRequest = {
-      filters: [],
-      pagination: {
-        pageNumber,
-        pageSize: TABLE_PAGE_SIZE,
-        orderBy: "createdAt",
-        sortDirection: "DESC",
-      },
-    }
-    const page = await profilesService.getProfiles(query)
-    collected.push(...page.profilesResponse)
-    hasNext = page.hasNext
-    pageNumber += 1
-  }
-
-  return collected.filter((profile) => profile.isActive)
+  return profilesService.getActiveProfiles()
 }
 
 const resolveProfileName = (profileId: string, profiles: Profile[]): string => {
