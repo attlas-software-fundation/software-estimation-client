@@ -10,7 +10,7 @@ export const RequireGuest = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!isLoading && session) {
-      router.replace("/projects")
+      router.replace("/dashboard")
     }
   }, [isLoading, router, session])
 
