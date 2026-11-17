@@ -1,4 +1,4 @@
-import { ReportsView } from "@/features/reports/ui/reports-view"
+import { ReportsView } from "@/features/reports"
 
 type ReportsPageProps = {
   params: Promise<{ projectId: string }>
