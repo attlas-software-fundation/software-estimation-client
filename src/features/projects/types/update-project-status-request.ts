@@ -1,8 +1,9 @@
-export interface UpdateProjectStatusRequest {
-  status: string
+import type { ProjectStatus } from "@/enumeration/project-status"
+
+export type UpdateProjectStatusRequest = {
+  status: ProjectStatus
 }
 
-export type UpdateProjectStatusPayload = {
+export type UpdateProjectStatusPayload = UpdateProjectStatusRequest & {
   projectId: string
-  status: string
 }

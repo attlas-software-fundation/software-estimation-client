@@ -3,13 +3,13 @@
 import Link from "next/link"
 import {
   ArrowRightLeftIcon,
-  FolderKanbanIcon,
   HistoryIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  Settings2Icon,
   TrashIcon,
 } from "lucide-react"
-import { buttonVariants } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,10 +21,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import type { Project } from "../types/project-types"
+import type { Project } from "../types"
 
 type ProjectsRowActionsProps = {
   project: Project
+  onEdit?: (project: Project) => void
   onDelete: (project: Project) => void
   onChangeStatus?: (project: Project) => void
   onViewHistory?: (project: Project) => void
@@ -32,6 +33,7 @@ type ProjectsRowActionsProps = {
 
 export const ProjectsRowActions = ({
   project,
+  onEdit,
   onDelete,
   onChangeStatus,
   onViewHistory,
@@ -50,7 +52,7 @@ export const ProjectsRowActions = ({
             />
           }
         >
-          <FolderKanbanIcon />
+          <Settings2Icon />
           <span className="sr-only">Gestionar proyecto</span>
         </TooltipTrigger>
         <TooltipContent>Gestionar proyecto</TooltipContent>
@@ -59,16 +61,28 @@ export const ProjectsRowActions = ({
       <Tooltip>
         <TooltipTrigger
           render={
-            <Link
-              href={`/projects/${project.id}/edit`}
-              className={buttonVariants({
-                variant: "ghost",
-                size: "icon-sm",
-              })}
-            />
+            onEdit ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => onEdit(project)}
+              >
+                <PencilIcon />
+                <span className="sr-only">Editar proyecto</span>
+              </Button>
+            ) : (
+              <Link
+                href={`/projects/${project.id}/edit`}
+                className={buttonVariants({
+                  variant: "ghost",
+                  size: "icon-sm",
+                })}
+              />
+            )
           }
         >
-          <PencilIcon />
+          {onEdit ? null : <PencilIcon />}
           <span className="sr-only">Editar proyecto</span>
         </TooltipTrigger>
         <TooltipContent>Editar proyecto</TooltipContent>

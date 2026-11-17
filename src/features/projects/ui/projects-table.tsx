@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Activity, Bot, Cpu, Layers, Sliders, TrendingUp } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -15,7 +14,12 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { formatDate } from "@/lib/format"
-import type { Project } from "../types/project-types"
+import {
+  PROJECT_STATUS_LABELS,
+  PROJECT_STATUS_VARIANTS,
+  PROJECT_TYPE_BY_VALUE,
+  type Project,
+} from "../types"
 import { ProjectDeleteDialog } from "./project-delete-dialog"
 import { ProjectStatusDialog } from "./project-status-dialog"
 import { ProjectHistoryDialog } from "./project-history-dialog"
@@ -23,39 +27,8 @@ import { ProjectsRowActions } from "./projects-row-actions"
 
 interface ProjectsTableProps {
   projects: Project[]
-}
-
-const TIPO_LABELS: Record<string, string> = {
-  monitoreo: "Monitoreo IoT",
-  automatizacion: "Automatización IoT",
-  monitoreo_automatizacion: "Monitoreo y automatización IoT",
-  telemetria: "Telemetría IoT",
-  control_supervision: "Control y supervisión IoT",
-  mantenimiento_predictivo: "Mantenimiento predictivo IoT",
-  integracion: "Integración IoT",
-  investigacion: "Integración IoT",
-}
-
-const TIPO_ICONS = {
-  monitoreo: Cpu,
-  automatizacion: Bot,
-  monitoreo_automatizacion: Bot,
-  telemetria: Activity,
-  control_supervision: Sliders,
-  mantenimiento_predictivo: TrendingUp,
-  integracion: Layers,
-  investigacion: Layers,
-}
-
-const TIPO_COLORS: Record<string, string> = {
-  monitoreo: "text-blue-500",
-  automatizacion: "text-emerald-500",
-  monitoreo_automatizacion: "text-emerald-500",
-  telemetria: "text-amber-500",
-  control_supervision: "text-purple-500",
-  mantenimiento_predictivo: "text-rose-500",
-  integracion: "text-cyan-500",
-  investigacion: "text-cyan-500",
+  usersMap: Map<string, string>
+  onEdit?: (project: Project) => void
 }
 
 const getInitials = (name: string) => {
@@ -68,28 +41,11 @@ const getInitials = (name: string) => {
     .toUpperCase()
 }
 
-const getEstadoInfo = (estado: string) => {
-  switch (estado) {
-    case "borrador":
-      return { label: "Borrador", variant: "muted" as const }
-    case "en_evaluacion":
-      return { label: "En evaluación", variant: "warning" as const }
-    case "estimado":
-      return { label: "Estimado", variant: "info" as const }
-    case "aprobado":
-      return { label: "Aprobado", variant: "success" as const }
-    case "rechazado":
-      return { label: "Rechazado", variant: "destructive" as const }
-    case "en_ejecucion":
-      return { label: "En ejecución", variant: "default" as const }
-    case "finalizado":
-      return { label: "Finalizado", variant: "secondary" as const }
-    default:
-      return { label: estado, variant: "default" as const }
-  }
-}
-
-export const ProjectsTable = ({ projects }: ProjectsTableProps) => {
+export const ProjectsTable = ({
+  projects,
+  usersMap,
+  onEdit,
+}: ProjectsTableProps) => {
   const [deletingProject, setDeletingProject] = useState<Project | null>(null)
   const [transitioningProject, setTransitioningProject] =
     useState<Project | null>(null)
@@ -110,10 +66,10 @@ export const ProjectsTable = ({ projects }: ProjectsTableProps) => {
       </TableHeader>
       <TableBody>
         {projects.map((project) => {
-          const estadoInfo = getEstadoInfo(project.estado)
-          const TipoIcon = TIPO_ICONS[project.tipo as keyof typeof TIPO_ICONS]
-          const tipoColor =
-            TIPO_COLORS[project.tipo as keyof typeof TIPO_COLORS]
+          const typeInfo = PROJECT_TYPE_BY_VALUE[project.type]
+          const TypeIcon = typeInfo.icon
+          const responsibleName =
+            usersMap.get(project.responsibleId) || "Sin asignar"
 
           return (
             <TableRow
@@ -125,40 +81,36 @@ export const ProjectsTable = ({ projects }: ProjectsTableProps) => {
                   href={`/projects/${project.id}/backlog`}
                   className="hover:text-primary transition-colors hover:underline"
                 >
-                  {project.nombre}
+                  {project.name}
                 </Link>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  {TipoIcon ? (
-                    <TipoIcon
-                      className={cn(
-                        "size-4",
-                        tipoColor || "text-muted-foreground"
-                      )}
-                    />
-                  ) : null}
-                  <span>{TIPO_LABELS[project.tipo] ?? project.tipo}</span>
+                  <TypeIcon className={cn("size-4", typeInfo.color)} />
+                  <span>{typeInfo.label}</span>
                 </div>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
                   <Avatar size="sm">
                     <AvatarFallback className="bg-primary text-xs font-medium text-blue-100">
-                      {getInitials(project.responsable)}
+                      {getInitials(responsibleName)}
                     </AvatarFallback>
                   </Avatar>
-                  <span>{project.responsable}</span>
+                  <span>{responsibleName}</span>
                 </div>
               </TableCell>
               <TableCell>
-                <Badge variant={estadoInfo.variant}>{estadoInfo.label}</Badge>
+                <Badge variant={PROJECT_STATUS_VARIANTS[project.status]}>
+                  {PROJECT_STATUS_LABELS[project.status]}
+                </Badge>
               </TableCell>
-              <TableCell>{formatDate(project.fecha_inicio)}</TableCell>
-              <TableCell>{formatDate(project.fecha_fin)}</TableCell>
+              <TableCell>{formatDate(project.startDate)}</TableCell>
+              <TableCell>{formatDate(project.plannedDate)}</TableCell>
               <TableCell>
                 <ProjectsRowActions
                   project={project}
+                  onEdit={onEdit}
                   onDelete={setDeletingProject}
                   onChangeStatus={setTransitioningProject}
                   onViewHistory={setHistoryProject}

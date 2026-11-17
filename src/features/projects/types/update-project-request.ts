@@ -1,13 +1,7 @@
-export interface UpdateProjectRequest {
-  name: string
-  description?: string
-  type: string
-  startDate: string
-  plannedDate: string
-  responsibleId: string
-}
+import type { CreateProjectRequest } from "./create-project-request"
 
-export type UpdateProjectPayload = {
+export type UpdateProjectRequest = CreateProjectRequest
+
+export type UpdateProjectPayload = UpdateProjectRequest & {
   projectId: string
-  data: UpdateProjectRequest
 }

@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useProject } from "../hooks/use-projects"
+import { useProject } from "../hooks/use-project"
 import { ProjectForm } from "./project-form"
 
 interface ProjectDetailViewProps {

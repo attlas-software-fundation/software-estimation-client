@@ -1,34 +1,24 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import Link from "next/link"
 import { FolderKanbanIcon, PlusIcon } from "lucide-react"
-
 import { DataTable } from "@/components/data-table"
-import { buttonVariants } from "@/components/ui/button"
-
+import { Button } from "@/components/ui/button"
 import { useDebounce, usePagination } from "@/hooks"
 import { TABLE_PAGE_SIZE } from "@/lib/pagination"
 import { useUsers } from "@/features/users/hooks/use-users"
 import { getFullName } from "@/features/auth/types"
-
 import {
   FilterOperator,
   type FilterRequest,
   type QueryRequest,
 } from "@/types/api"
-
-import { useProjects } from "../hooks/use-projects"
-import type { ProjectFilters, ProjectSearchResponse } from "../types"
-import {
-  projectStatusToApi,
-  projectTypeToApi,
-  toProject,
-} from "../types/project-response"
-
+import { useProjects } from "@/features/projects"
+import type { Project, ProjectFilters, ProjectSearchResponse } from "../types"
 import { ProjectsTable } from "./projects-table"
+import { ProjectDialog } from "./project-dialog"
 import { ProjectToolbar } from "./project-toolbar"
-import { ProjectsFiltersDrawer } from "./projects-filters-drawer"
+import { ProjectsFiltersDrawer } from "@/features/projects"
 
 const emptyPage: ProjectSearchResponse = {
   projectResponse: [],
@@ -47,21 +37,23 @@ export const ProjectsView = () => {
   const debouncedSearch = useDebounce(search, 500)
 
   const [filters, setFilters] = useState<ProjectFilters>({
-    nombre: "",
-    tipo: "",
-    responsable: "",
-    estado: "",
-    fecha_inicio: "",
-    fecha_fin: "",
+    name: "",
+    type: "",
+    responsibleId: "",
+    status: "",
+    startDate: "",
+    plannedDate: "",
   })
 
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingProject, setEditingProject] = useState<Project | null>(null)
 
   const { data: usersData } = useUsers({
     filters: [],
     pagination: {
       orderBy: "createdAt",
-      pageSize: 1000,
+      pageSize: TABLE_PAGE_SIZE,
       pageNumber: 0,
       sortDirection: "ASC",
     },
@@ -69,7 +61,7 @@ export const ProjectsView = () => {
 
   const usersMap = useMemo(() => {
     const map = new Map<string, string>()
-    for (const user of usersData?.userResponse ?? []) {
+    for (const user of usersData?.userResponse || []) {
       map.set(user.id, getFullName(user))
     }
     return map
@@ -77,12 +69,12 @@ export const ProjectsView = () => {
 
   const activeFilters =
     (search.length > 0 ? 1 : 0) +
-    (filters.nombre.length > 0 ? 1 : 0) +
-    (filters.tipo.length > 0 ? 1 : 0) +
-    (filters.responsable.length > 0 ? 1 : 0) +
-    (filters.estado.length > 0 ? 1 : 0) +
-    (filters.fecha_inicio.length > 0 ? 1 : 0) +
-    (filters.fecha_fin.length > 0 ? 1 : 0)
+    (filters.name.length > 0 ? 1 : 0) +
+    (filters.type.length > 0 ? 1 : 0) +
+    (filters.responsibleId.length > 0 ? 1 : 0) +
+    (filters.status.length > 0 ? 1 : 0) +
+    (filters.startDate.length > 0 ? 1 : 0) +
+    (filters.plannedDate.length > 0 ? 1 : 0)
 
   const apiFilters: FilterRequest[] = []
 
@@ -94,45 +86,42 @@ export const ProjectsView = () => {
     })
   }
 
-  if (filters.nombre.trim().length > 0) {
+  if (filters.name.trim().length > 0) {
     apiFilters.push({
       key: "name",
       operator: FilterOperator.LK,
-      values: [filters.nombre.trim()],
+      values: [filters.name.trim()],
     })
   }
 
-  if (filters.tipo) {
-    const apiType = projectTypeToApi[filters.tipo] ?? filters.tipo.toUpperCase()
+  if (filters.type) {
     apiFilters.push({
       key: "type",
       operator: FilterOperator.EQ,
-      values: [apiType],
+      values: [filters.type],
     })
   }
 
-  if (filters.responsable) {
+  if (filters.responsibleId) {
     apiFilters.push({
       key: "responsibleId",
       operator: FilterOperator.EQ,
-      values: [filters.responsable],
+      values: [filters.responsibleId],
     })
   }
 
-  if (filters.estado) {
-    const apiStatus =
-      projectStatusToApi[filters.estado] ?? filters.estado.toUpperCase()
+  if (filters.status) {
     apiFilters.push({
       key: "status",
       operator: FilterOperator.EQ,
-      values: [apiStatus],
+      values: [filters.status],
     })
   }
 
-  if (filters.fecha_inicio) {
-    const dateValue = filters.fecha_inicio.includes("T")
-      ? filters.fecha_inicio.split("T")[0]
-      : filters.fecha_inicio
+  if (filters.startDate) {
+    const dateValue = filters.startDate.includes("T")
+      ? filters.startDate.split("T")[0]
+      : filters.startDate
     apiFilters.push({
       key: "startDate",
       operator: FilterOperator.GE,
@@ -140,10 +129,10 @@ export const ProjectsView = () => {
     })
   }
 
-  if (filters.fecha_fin) {
-    const dateValue = filters.fecha_fin.includes("T")
-      ? filters.fecha_fin.split("T")[0]
-      : filters.fecha_fin
+  if (filters.plannedDate) {
+    const dateValue = filters.plannedDate.includes("T")
+      ? filters.plannedDate.split("T")[0]
+      : filters.plannedDate
     apiFilters.push({
       key: "plannedDate",
       operator: FilterOperator.LE,
@@ -162,14 +151,17 @@ export const ProjectsView = () => {
   }
 
   const { data, isLoading, isError } = useProjects(query)
+  const pagination = data || emptyPage
 
-  const pagination = data ?? emptyPage
+  const handleOpenCreate = () => {
+    setEditingProject(null)
+    setDialogOpen(true)
+  }
 
-  const projects = useMemo(() => {
-    return (pagination.projectResponse ?? []).map((project) =>
-      toProject(project, usersMap.get(project.responsibleId))
-    )
-  }, [pagination.projectResponse, usersMap])
+  const handleEdit = (project: Project) => {
+    setEditingProject(project)
+    setDialogOpen(true)
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -179,7 +171,9 @@ export const ProjectsView = () => {
           activeFilters={activeFilters}
           filters={filters}
           responsibleLabel={
-            filters.responsable ? usersMap.get(filters.responsable) : undefined
+            filters.responsibleId
+              ? usersMap.get(filters.responsibleId)
+              : undefined
           }
           onSearchChange={(value) => {
             setSearch(value)
@@ -191,13 +185,14 @@ export const ProjectsView = () => {
             resetPage()
           }}
           actions={
-            <Link
-              href="/projects/new"
-              className={buttonVariants({ className: "shrink-0" })}
+            <Button
+              type="button"
+              onClick={handleOpenCreate}
+              className="shrink-0"
             >
               <PlusIcon />
               Nuevo proyecto
-            </Link>
+            </Button>
           }
         />
 
@@ -215,7 +210,11 @@ export const ProjectsView = () => {
           pagination={pagination}
           onPageChange={setPageNumber}
         >
-          <ProjectsTable projects={projects} />
+          <ProjectsTable
+            projects={pagination.projectResponse}
+            usersMap={usersMap}
+            onEdit={handleEdit}
+          />
         </DataTable>
       </div>
 
@@ -227,6 +226,17 @@ export const ProjectsView = () => {
           setFilters(nextFilters)
           resetPage()
         }}
+      />
+
+      <ProjectDialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open)
+          if (!open) {
+            setEditingProject(null)
+          }
+        }}
+        project={editingProject}
       />
     </div>
   )
