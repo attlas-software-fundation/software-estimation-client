@@ -17,7 +17,7 @@ export const adaptProjectCostResponse = (
     currency: response.total.currency,
     taskCosts: response.tasks.map((task) => ({
       taskId: task.taskId,
-      taskName: task.taskId,
+      taskName: task.taskTitle,
       totalHours: task.contributions.reduce(
         (total, item) => total + item.hours,
         0
@@ -27,9 +27,9 @@ export const adaptProjectCostResponse = (
       contributions: task.contributions,
       profiles: task.contributions.map((item) => ({
         profileId: item.technicalProfileId,
-        profileName: item.technicalProfileId,
-        profileRole: "",
-        profileEmail: "",
+        profileName: item.profileName,
+        profileRole: item.profileRole,
+        profileEmail: item.profileEmail,
       })),
     })),
     profileBreakdown: response.profiles.map((profile) => {
@@ -46,9 +46,9 @@ export const adaptProjectCostResponse = (
 
       return {
         profileId: profile.technicalProfileId,
-        profileName: profile.technicalProfileId,
-        profileRole: "",
-        profileEmail: "",
+        profileName: profile.profileName,
+        profileRole: profile.profileRole,
+        profileEmail: profile.profileEmail,
         totalHours: items.reduce((total, item) => total + item.hours, 0),
         cer: items.every((item) => item.hourlyRate === first.hourlyRate)
           ? first.hourlyRate
