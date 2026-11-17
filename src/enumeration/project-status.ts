@@ -1,55 +1,93 @@
+import {
+  Calculator,
+  CheckCircle,
+  Eye,
+  FileText,
+  Flag,
+  PlayCircle,
+  XCircle,
+  type LucideIcon,
+} from "lucide-react"
+
+export type ProjectStatus =
+  | "DRAFT"
+  | "UNDER_REVIEW"
+  | "ESTIMATED"
+  | "APPROVED"
+  | "REJECTED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+
+export type ProjectStatusBadgeVariant =
+  | "default"
+  | "secondary"
+  | "destructive"
+  | "muted"
+  | "success"
+  | "warning"
+  | "info"
+
 export type ProjectStatusDefinition = {
-  value: string
+  value: ProjectStatus
   label: string
-  variant:
-    | "default"
-    | "secondary"
-    | "destructive"
-    | "muted"
-    | "success"
-    | "warning"
-    | "info"
+  variant: ProjectStatusBadgeVariant
+  icon: LucideIcon
+  color: string
 }
 
 export const ProjectStatusEnum = {
   DRAFT: {
-    value: "borrador",
+    value: "DRAFT",
     label: "Borrador",
     variant: "muted",
+    icon: FileText,
+    color: "text-muted-foreground",
   },
   UNDER_REVIEW: {
-    value: "en_evaluacion",
+    value: "UNDER_REVIEW",
     label: "En evaluación",
     variant: "warning",
+    icon: Eye,
+    color: "text-amber-500",
   },
   ESTIMATED: {
-    value: "estimado",
+    value: "ESTIMATED",
     label: "Estimado",
     variant: "info",
+    icon: Calculator,
+    color: "text-blue-500",
   },
   APPROVED: {
-    value: "aprobado",
+    value: "APPROVED",
     label: "Aprobado",
     variant: "success",
+    icon: CheckCircle,
+    color: "text-emerald-500",
   },
   REJECTED: {
-    value: "rechazado",
+    value: "REJECTED",
     label: "Rechazado",
     variant: "destructive",
+    icon: XCircle,
+    color: "text-red-500",
   },
   IN_PROGRESS: {
-    value: "en_ejecucion",
+    value: "IN_PROGRESS",
     label: "En ejecución",
     variant: "default",
+    icon: PlayCircle,
+    color: "text-cyan-500",
   },
   COMPLETED: {
-    value: "finalizado",
+    value: "COMPLETED",
     label: "Finalizado",
     variant: "secondary",
+    icon: Flag,
+    color: "text-purple-500",
   },
-} as const satisfies Record<string, ProjectStatusDefinition>
+} as const satisfies Record<ProjectStatus, ProjectStatusDefinition>
 
-export const PROJECT_STATUSES = [
+export const PROJECT_STATUSES: readonly [ProjectStatus, ...ProjectStatus[]] = [
   ProjectStatusEnum.DRAFT.value,
   ProjectStatusEnum.UNDER_REVIEW.value,
   ProjectStatusEnum.ESTIMATED.value,
@@ -57,53 +95,40 @@ export const PROJECT_STATUSES = [
   ProjectStatusEnum.REJECTED.value,
   ProjectStatusEnum.IN_PROGRESS.value,
   ProjectStatusEnum.COMPLETED.value,
-] as const
+]
 
-export type ProjectStatus = (typeof PROJECT_STATUSES)[number]
+export const PROJECT_STATUS_OPTIONS: ProjectStatusDefinition[] = [
+  ProjectStatusEnum.DRAFT,
+  ProjectStatusEnum.UNDER_REVIEW,
+  ProjectStatusEnum.ESTIMATED,
+  ProjectStatusEnum.APPROVED,
+  ProjectStatusEnum.REJECTED,
+  ProjectStatusEnum.IN_PROGRESS,
+  ProjectStatusEnum.COMPLETED,
+]
 
-export type ProjectStatusBadgeVariant = ProjectStatusDefinition["variant"]
+export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+  DRAFT: ProjectStatusEnum.DRAFT.label,
+  UNDER_REVIEW: ProjectStatusEnum.UNDER_REVIEW.label,
+  ESTIMATED: ProjectStatusEnum.ESTIMATED.label,
+  APPROVED: ProjectStatusEnum.APPROVED.label,
+  REJECTED: ProjectStatusEnum.REJECTED.label,
+  IN_PROGRESS: ProjectStatusEnum.IN_PROGRESS.label,
+  COMPLETED: ProjectStatusEnum.COMPLETED.label,
+}
 
-export const PROJECT_STATUS_LABELS = {
-  [ProjectStatusEnum.DRAFT.value]: ProjectStatusEnum.DRAFT.label,
-  [ProjectStatusEnum.UNDER_REVIEW.value]: ProjectStatusEnum.UNDER_REVIEW.label,
-  [ProjectStatusEnum.ESTIMATED.value]: ProjectStatusEnum.ESTIMATED.label,
-  [ProjectStatusEnum.APPROVED.value]: ProjectStatusEnum.APPROVED.label,
-  [ProjectStatusEnum.REJECTED.value]: ProjectStatusEnum.REJECTED.label,
-  [ProjectStatusEnum.IN_PROGRESS.value]: ProjectStatusEnum.IN_PROGRESS.label,
-  [ProjectStatusEnum.COMPLETED.value]: ProjectStatusEnum.COMPLETED.label,
-} as const satisfies Record<ProjectStatus, string>
-
-export const PROJECT_STATUS_VARIANTS = {
-  [ProjectStatusEnum.DRAFT.value]: ProjectStatusEnum.DRAFT.variant,
-  [ProjectStatusEnum.UNDER_REVIEW.value]:
-    ProjectStatusEnum.UNDER_REVIEW.variant,
-  [ProjectStatusEnum.ESTIMATED.value]: ProjectStatusEnum.ESTIMATED.variant,
-  [ProjectStatusEnum.APPROVED.value]: ProjectStatusEnum.APPROVED.variant,
-  [ProjectStatusEnum.REJECTED.value]: ProjectStatusEnum.REJECTED.variant,
-  [ProjectStatusEnum.IN_PROGRESS.value]: ProjectStatusEnum.IN_PROGRESS.variant,
-  [ProjectStatusEnum.COMPLETED.value]: ProjectStatusEnum.COMPLETED.variant,
-} as const satisfies Record<ProjectStatus, ProjectStatusBadgeVariant>
-
-export const ProjectStatusApiMap: Record<string, ProjectStatus> = {
-  DRAFT: "borrador",
-  UNDER_REVIEW: "en_evaluacion",
-  ESTIMATED: "estimado",
-  APPROVED: "aprobado",
-  REJECTED: "rechazado",
-  IN_PROGRESS: "en_ejecucion",
-  COMPLETED: "finalizado",
+export const PROJECT_STATUS_VARIANTS: Record<
+  ProjectStatus,
+  ProjectStatusBadgeVariant
+> = {
+  DRAFT: ProjectStatusEnum.DRAFT.variant,
+  UNDER_REVIEW: ProjectStatusEnum.UNDER_REVIEW.variant,
+  ESTIMATED: ProjectStatusEnum.ESTIMATED.variant,
+  APPROVED: ProjectStatusEnum.APPROVED.variant,
+  REJECTED: ProjectStatusEnum.REJECTED.variant,
+  IN_PROGRESS: ProjectStatusEnum.IN_PROGRESS.variant,
+  COMPLETED: ProjectStatusEnum.COMPLETED.variant,
 }
 
 export const isProjectStatus = (value: string): value is ProjectStatus =>
   PROJECT_STATUSES.some((status) => status === value)
-
-export const toProjectStatus = (value: string): ProjectStatus => {
-  if (isProjectStatus(value)) {
-    return value
-  }
-  const fromApi = ProjectStatusApiMap[(value || "").toUpperCase()]
-  if (fromApi) {
-    return fromApi
-  }
-  return ProjectStatusEnum.DRAFT.value
-}

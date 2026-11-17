@@ -1,15 +1,18 @@
-export const STORAGE_KEYS = {
-  PROJECTS: "software_estimation_projects",
-  PROFILES: "software-estimation:profiles",
-  SESSION: "software-estimation:session",
-} as const
-
-export const readJson = <T>(key: string): T | null => {
-  if (typeof window === "undefined") {
+const getStorage = (): Storage | null => {
+  if (!("window" in globalThis) || !globalThis.window) {
     return null
   }
 
-  const raw = window.localStorage.getItem(key)
+  return globalThis.window.localStorage ?? null
+}
+
+export const readJson = <T>(key: string): T | null => {
+  const storage = getStorage()
+  if (!storage) {
+    return null
+  }
+
+  const raw = storage.getItem(key)
   if (!raw) {
     return null
   }
@@ -17,15 +20,23 @@ export const readJson = <T>(key: string): T | null => {
   try {
     return JSON.parse(raw) as T
   } catch {
-    window.localStorage.removeItem(key)
+    storage.removeItem(key)
     return null
   }
 }
 
 export const writeJson = <T>(key: string, value: T) => {
-  window.localStorage.setItem(key, JSON.stringify(value))
+  const storage = getStorage()
+  if (!storage) {
+    return
+  }
+  storage.setItem(key, JSON.stringify(value))
 }
 
 export const removeJson = (key: string) => {
-  window.localStorage.removeItem(key)
+  const storage = getStorage()
+  if (!storage) {
+    return
+  }
+  storage.removeItem(key)
 }

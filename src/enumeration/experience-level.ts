@@ -1,35 +1,51 @@
+export type ExperienceLevelValue = "JUNIOR" | "MID" | "SENIOR" | "LEAD"
+
+export type ExperienceLevelType = ExperienceLevelValue
+
 export type ExperienceLevelDefinition = {
-  value: string
+  value: ExperienceLevelValue
   label: string
 }
 
 export const ExperienceLevel = {
   JUNIOR: {
-    value: "Junior",
+    value: "JUNIOR",
     label: "Junior (0-2 años)",
   },
   MID: {
-    value: "Mid",
+    value: "MID",
     label: "Semi-Senior (2-5 años)",
   },
   SENIOR: {
-    value: "Senior",
+    value: "SENIOR",
     label: "Senior (5+ años)",
   },
   LEAD: {
-    value: "Lead",
+    value: "LEAD",
     label: "Líder / Principal",
   },
-} as const satisfies Record<string, ExperienceLevelDefinition>
+} as const satisfies Record<ExperienceLevelValue, ExperienceLevelDefinition>
 
-export const EXPERIENCE_LEVELS = [
+export const EXPERIENCE_LEVELS: readonly [
+  ExperienceLevelValue,
+  ...ExperienceLevelValue[],
+] = [
   ExperienceLevel.JUNIOR.value,
   ExperienceLevel.MID.value,
   ExperienceLevel.SENIOR.value,
   ExperienceLevel.LEAD.value,
-] as const
+]
 
-export type ExperienceLevelValue = (typeof EXPERIENCE_LEVELS)[number]
-export type ExperienceLevelType = ExperienceLevelValue
+export const EXPERIENCE_LEVEL_OPTIONS: ExperienceLevelDefinition[] = [
+  ExperienceLevel.JUNIOR,
+  ExperienceLevel.MID,
+  ExperienceLevel.SENIOR,
+  ExperienceLevel.LEAD,
+]
 
-export const EXPERIENCE_LEVEL_OPTIONS = Object.values(ExperienceLevel)
+export const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevelValue, string> = {
+  JUNIOR: ExperienceLevel.JUNIOR.label,
+  MID: ExperienceLevel.MID.label,
+  SENIOR: ExperienceLevel.SENIOR.label,
+  LEAD: ExperienceLevel.LEAD.label,
+}

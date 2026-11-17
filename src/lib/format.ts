@@ -1,3 +1,9 @@
+import { CurrencyCode } from "@/enumeration/currency-code"
+
+export { CurrencyCode }
+
+export const CURRENCY_CODE = CurrencyCode.PEN
+
 export const formatDate = (
   value: string,
   options: Intl.DateTimeFormatOptions = {
@@ -9,10 +15,6 @@ export const formatDate = (
     hour12: false,
   }
 ) => new Intl.DateTimeFormat("es-CO", options).format(new Date(value))
-
-export const CURRENCY_CODE = "PEN" as const
-
-export type CurrencyCode = typeof CURRENCY_CODE
 
 export const formatCurrency = (value: number) =>
   new Intl.NumberFormat("es-PE", {

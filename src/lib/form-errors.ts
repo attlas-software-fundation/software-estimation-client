@@ -1,21 +1,23 @@
+type ValidationIssueLike = {
+  message?: string
+}
+
 export const getFieldError = (errors: unknown[]): string => {
   if (errors.length === 0) {
     return ""
   }
 
   const error = errors[0]
-  if (typeof error === "string") {
-    return error
+  if (!error) {
+    return ""
   }
 
-  if (typeof error === "object" && error !== null && "message" in error) {
-    const message = error.message
-    if (typeof message === "string") {
-      return message
-    }
+  if (error instanceof Object && "message" in error) {
+    const issue = error as ValidationIssueLike
+    return issue.message ? String(issue.message) : ""
   }
 
-  return ""
+  return String(error)
 }
 
 export const getErrorMessage = (error: unknown, fallback: string) => {
