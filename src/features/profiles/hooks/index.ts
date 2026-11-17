@@ -1,6 +1,6 @@
 export {
   PROFILES_QUERY_KEY,
-  useActiveProfiles,
+  profileQueryKeys,
   useProfiles,
 } from "./use-profiles"
 export { useProfile } from "./use-profile"

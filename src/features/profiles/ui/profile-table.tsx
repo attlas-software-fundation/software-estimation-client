@@ -12,7 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { Profile } from "../types"
+import {
+  EXPERIENCE_LEVEL_LABELS,
+  TECHNICAL_ROLE_LABELS,
+  type Profile,
+} from "../types"
 import { ProfileRowActions } from "./profile-row-actions"
 
 type ProfileTableProps = {
@@ -62,10 +66,14 @@ export const ProfileTable = ({
                 </div>
               </TableCell>
               <TableCell>
-                <span className="text-sm font-medium">{profile.role}</span>
+                <span className="text-sm font-medium">
+                  {TECHNICAL_ROLE_LABELS[profile.role]}
+                </span>
               </TableCell>
               <TableCell>
-                <span className="text-sm">{profile.experienceLevel}</span>
+                <span className="text-sm">
+                  {EXPERIENCE_LEVEL_LABELS[profile.experienceLevel]}
+                </span>
               </TableCell>
               <TableCell>
                 <button

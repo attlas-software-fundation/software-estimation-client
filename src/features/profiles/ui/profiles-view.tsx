@@ -4,22 +4,36 @@ import { useState } from "react"
 import { IdCardIcon, PlusIcon } from "lucide-react"
 import { DataTable } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
+import { useDebounce, usePagination } from "@/hooks"
 import { TABLE_PAGE_SIZE } from "@/lib/pagination"
-import type { FilterRequest, QueryRequest } from "@/types/api"
+import {
+  FilterOperator,
+  type FilterRequest,
+  type QueryRequest,
+} from "@/types/api"
 import { useProfiles } from "../hooks"
-import type { Profile } from "../types"
-import { ProfileStats } from "./profile-stats"
+import type { Profile, ProfileSearchResponse } from "../types"
 import { ProfileFilters } from "./profile-filters"
 import { ProfileTable } from "./profile-table"
 import { ProfileDialog } from "./profile-dialog"
 import { AssignCerDialog } from "./assign-cer-dialog"
 import { DeleteProfileDialog } from "./delete-profile-dialog"
 
+const emptyPage: ProfileSearchResponse = {
+  profilesResponse: [],
+  pageSize: TABLE_PAGE_SIZE,
+  pageNumber: 0,
+  totalPages: 0,
+  totalElements: 0,
+  hasNext: false,
+  hasPrevious: false,
+}
+
 export const ProfilesView = () => {
+  const { pageNumber, pageSize, setPageNumber, resetPage } = usePagination()
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedRole, setSelectedRole] = useState("")
-  const [pageNumber, setPageNumber] = useState(0)
-  const pageSize = TABLE_PAGE_SIZE
+  const debouncedSearch = useDebounce(searchQuery, 500)
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [assignCerProfile, setAssignCerProfile] = useState<Profile | null>(null)
@@ -27,17 +41,17 @@ export const ProfilesView = () => {
   const [deletingProfile, setDeletingProfile] = useState<Profile | null>(null)
 
   const filters: FilterRequest[] = []
-  if (searchQuery.trim()) {
+  if (debouncedSearch.trim().length > 0) {
     filters.push({
       key: "search",
-      operator: "LK",
-      values: [searchQuery.trim()],
+      operator: FilterOperator.LK,
+      values: [debouncedSearch.trim()],
     })
   }
-  if (selectedRole.trim()) {
+  if (selectedRole.trim().length > 0) {
     filters.push({
       key: "role",
-      operator: "EQ",
+      operator: FilterOperator.EQ,
       values: [selectedRole.trim()],
     })
   }
@@ -52,17 +66,9 @@ export const ProfilesView = () => {
     },
   }
 
-  const { data, isLoading, isError, error } = useProfiles(queryRequest)
-
-  const profiles = data?.profilesResponse ?? []
-  const paginationMeta = {
-    pageNumber: data?.pageNumber ?? 0,
-    pageSize: data?.pageSize ?? pageSize,
-    totalElements: data?.totalElements ?? 0,
-    totalPages: data?.totalPages ?? 1,
-    hasNext: data?.hasNext ?? false,
-    hasPrevious: data?.hasPrevious ?? false,
-  }
+  const { data, isLoading, isError } = useProfiles(queryRequest)
+  const pagination = data || emptyPage
+  const profiles = pagination.profilesResponse
 
   const handleOpenCreate = () => {
     setEditingProfile(null)
@@ -90,19 +96,17 @@ export const ProfilesView = () => {
         </p>
       </div>
 
-      <ProfileStats profiles={profiles} />
-
       <div className="flex flex-col gap-3">
         <ProfileFilters
           searchQuery={searchQuery}
           onSearchChange={(val) => {
             setSearchQuery(val)
-            setPageNumber(0)
+            resetPage()
           }}
           selectedRole={selectedRole}
           onRoleChange={(val) => {
             setSelectedRole(val)
-            setPageNumber(0)
+            resetPage()
           }}
           actions={
             <Button
@@ -119,13 +123,11 @@ export const ProfilesView = () => {
         <DataTable
           isLoading={isLoading}
           isError={isError}
-          errorMessage={
-            error?.message ?? "Error al cargar los perfiles técnicos."
-          }
+          errorMessage="No se pudieron cargar los perfiles técnicos."
           isEmpty={profiles.length === 0}
           emptyIcon={IdCardIcon}
           emptyMessage="No se encontraron perfiles técnicos. Registra el primer perfil técnico."
-          pagination={paginationMeta}
+          pagination={pagination}
           onPageChange={setPageNumber}
         >
           <ProfileTable

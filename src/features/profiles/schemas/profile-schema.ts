@@ -1,15 +1,10 @@
 import { z } from "zod"
 import {
+  CurrencyCode,
   EXPERIENCE_LEVELS,
   TECHNICAL_ROLES,
-  experienceLevelToApi,
-  technicalRoleToApi,
   type CreateTechnicalProfileRequest,
-  type UpdateTechnicalProfileRequest,
 } from "../types"
-
-export const technicalRoles = TECHNICAL_ROLES
-export const experienceLevels = EXPERIENCE_LEVELS
 
 export const profileSchema = z.object({
   name: z
@@ -23,7 +18,7 @@ export const profileSchema = z.object({
   hourlyRate: z
     .number({ message: "El costo horario (CER) debe ser un número válido." })
     .positive({ message: "El costo horario (CER) debe ser mayor a 0." }),
-  currency: z.literal("PEN"),
+  currency: z.nativeEnum(CurrencyCode),
   experienceLevel: z.enum(EXPERIENCE_LEVELS, {
     message: "Por favor selecciona un nivel de experiencia válido.",
   }),
@@ -34,30 +29,4 @@ export const profileSchema = z.object({
   isActive: z.boolean(),
 })
 
-export type ProfileFormValues = z.infer<typeof profileSchema>
-
-export const createProfileRequestSchema = profileSchema.transform(
-  (data): CreateTechnicalProfileRequest => ({
-    name: data.name,
-    email: data.email,
-    role: technicalRoleToApi[data.role] ?? "OTHER",
-    experienceLevel: experienceLevelToApi[data.experienceLevel] ?? "MID",
-    hourlyRate: data.hourlyRate,
-    currency: "PEN",
-    isActive: data.isActive,
-  })
-)
-
-export const updateProfileRequestSchema = profileSchema
-  .partial()
-  .transform((data): UpdateTechnicalProfileRequest => ({
-    name: data.name,
-    email: data.email,
-    role: data.role ? technicalRoleToApi[data.role] : undefined,
-    experienceLevel: data.experienceLevel
-      ? experienceLevelToApi[data.experienceLevel]
-      : undefined,
-    hourlyRate: data.hourlyRate,
-    currency: data.currency ?? "PEN",
-    isActive: data.isActive,
-  }))
+export type ProfileFormValues = CreateTechnicalProfileRequest

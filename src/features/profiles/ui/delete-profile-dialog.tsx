@@ -5,7 +5,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog"
 import { toast } from "@/components/ui/toast"
 import { getErrorMessage } from "@/lib/form-errors"
 import { useDeleteProfile } from "../hooks"
-import type { Profile } from "../types"
+import { TECHNICAL_ROLE_LABELS, type Profile } from "../types"
 
 type DeleteProfileDialogProps = {
   profile: Profile | null
@@ -62,7 +62,8 @@ export const DeleteProfileDialog = ({
         <>
           ¿Seguro que quieres eliminar el perfil{" "}
           <span className="text-foreground font-semibold">{profile.name}</span>{" "}
-          ({profile.role})? Esta acción no se puede deshacer.
+          ({TECHNICAL_ROLE_LABELS[profile.role]})? Esta acción no se puede
+          deshacer.
         </>
       }
     />

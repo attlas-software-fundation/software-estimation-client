@@ -27,13 +27,18 @@ import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/toast"
 import { getErrorMessage, getFieldError } from "@/lib/form-errors"
 import { useUpdateProfileCer } from "../hooks"
-import type { Profile } from "../types"
+import {
+  CurrencyCode,
+  EXPERIENCE_LEVEL_LABELS,
+  TECHNICAL_ROLE_LABELS,
+  type Profile,
+} from "../types"
 
 const cerSchema = z.object({
   hourlyRate: z
     .number({ message: "El costo horario (CER) debe ser un número válido." })
     .positive({ message: "El costo horario (CER) debe ser mayor a 0." }),
-  currency: z.literal("PEN"),
+  currency: z.nativeEnum(CurrencyCode),
 })
 
 type AssignCerDialogProps = {
@@ -51,8 +56,11 @@ export const AssignCerDialog = ({
 
   const form = useForm({
     defaultValues: {
-      hourlyRate: profile?.hourlyRate ?? 0,
-      currency: "PEN",
+      hourlyRate: profile ? profile.hourlyRate : 0,
+      currency: CurrencyCode.PEN,
+    },
+    validators: {
+      onSubmit: cerSchema,
     },
     onSubmit: async ({ value }) => {
       if (!profile) return
@@ -60,7 +68,7 @@ export const AssignCerDialog = ({
         await updateCerMutation.mutateAsync({
           id: profile.id,
           hourlyRate: value.hourlyRate,
-          currency: "PEN",
+          currency: CurrencyCode.PEN,
         })
         toast.add({
           title: "CER actualizado",
@@ -97,17 +105,19 @@ export const AssignCerDialog = ({
           <div className="flex flex-col">
             <span className="text-sm font-semibold">{profile.name}</span>
             <span className="text-muted-foreground text-xs">
-              {profile.role}
+              {TECHNICAL_ROLE_LABELS[profile.role]}
             </span>
           </div>
-          <Badge variant="secondary">{profile.experienceLevel}</Badge>
+          <Badge variant="secondary">
+            {EXPERIENCE_LEVEL_LABELS[profile.experienceLevel]}
+          </Badge>
         </div>
 
         <form
           onSubmit={(e) => {
             e.preventDefault()
             e.stopPropagation()
-            form.handleSubmit()
+            void form.handleSubmit()
           }}
           className="space-y-4 pt-1"
         >
@@ -120,15 +130,7 @@ export const AssignCerDialog = ({
             </Alert>
           )}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <form.Field
-              name="hourlyRate"
-              validators={{
-                onChange: ({ value }) => {
-                  const res = cerSchema.shape.hourlyRate.safeParse(value)
-                  return res.success ? undefined : res.error.issues[0]?.message
-                },
-              }}
-            >
+            <form.Field name="hourlyRate">
               {(field) => (
                 <div className="space-y-1.5">
                   <Label htmlFor={field.name}>Costo estándar / hora</Label>
@@ -157,12 +159,12 @@ export const AssignCerDialog = ({
               {(field) => (
                 <div className="space-y-1.5">
                   <Label htmlFor={field.name}>Moneda</Label>
-                  <Select value="PEN" disabled>
+                  <Select value={CurrencyCode.PEN} disabled>
                     <SelectTrigger id={field.name} className="w-full">
                       <SelectValue placeholder="PEN (S/)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="PEN">PEN (S/)</SelectItem>
+                      <SelectItem value={CurrencyCode.PEN}>PEN (S/)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -170,7 +172,7 @@ export const AssignCerDialog = ({
             </form.Field>
           </div>
 
-          <DialogFooter className="gap-2 pt-2 sm:gap-0">
+          <DialogFooter className="gap-2 pt-2">
             <Button
               type="button"
               variant="outline"
