@@ -19,11 +19,12 @@ import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
 import { usePermissions } from "@/features/auth/hooks/use-permissions"
 import { useSession } from "@/features/auth/hooks/use-session"
-import { PERMISSIONS } from "@/enumeration/permission"
+import { PERMISSIONS, type PermissionCode } from "@/enumeration/permission"
 import {
+  ChartColumnIcon,
   FolderKanbanIcon,
   FileBarChartIcon,
-  LayersIcon,
+  IdCardIcon,
   UsersIcon,
   type LucideIcon,
 } from "lucide-react"
@@ -32,10 +33,15 @@ type SidebarItem = {
   title: string
   url: string
   icon: LucideIcon
-  permission?: (typeof PERMISSIONS)[keyof typeof PERMISSIONS]
+  permission?: PermissionCode
 }
 
 const estimationModules: SidebarItem[] = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: FileBarChartIcon,
+  },
   {
     title: "Proyectos",
     url: "/projects",
@@ -45,13 +51,13 @@ const estimationModules: SidebarItem[] = [
   {
     title: "Perfiles técnicos (CER)",
     url: "/profiles",
-    icon: LayersIcon,
+    icon: IdCardIcon,
     permission: PERMISSIONS.PROFILE_READ,
   },
   {
     title: "Reportes del sistema",
     url: "/reports",
-    icon: FileBarChartIcon,
+    icon: ChartColumnIcon,
     permission: PERMISSIONS.REPORT_READ,
   },
 ]
@@ -68,9 +74,7 @@ const securityModules: SidebarItem[] = [
 const isActivePath = (pathname: string, url: string) =>
   pathname === url || pathname.startsWith(`${url}/`)
 
-export const AppSidebar = ({
-  ...props
-}: React.ComponentProps<typeof Sidebar>) => {
+export const AppSidebar = ({ ...props }: React.ComponentProps<"div">) => {
   const pathname = usePathname()
   const { data: session } = useSession()
   const { hasPermission } = usePermissions()

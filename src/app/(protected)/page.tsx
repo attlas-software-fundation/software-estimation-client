@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 
 const ProtectedIndexPage = () => {
-  redirect("/projects")
+  redirect("/dashboard")
 }
 
 export default ProtectedIndexPage
