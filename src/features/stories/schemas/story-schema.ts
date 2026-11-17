@@ -1,4 +1,12 @@
 import { z } from "zod"
+import {
+  STORY_PRIORITIES,
+  STORY_STATUSES,
+  TASK_STATUSES,
+  type StoryPriority,
+  type StoryStatus,
+  type TaskStatus,
+} from "../types"
 
 export const storySchema = z.object({
   title: z.string().trim().min(3, "El título debe tener al menos 3 caracteres"),
@@ -6,8 +14,8 @@ export const storySchema = z.object({
     .string()
     .trim()
     .min(10, "La descripción debe tener al menos 10 caracteres"),
-  priority: z.enum(["low", "medium", "high"]),
-  status: z.enum(["draft", "ready", "in-progress", "done"]),
+  priority: z.enum(STORY_PRIORITIES),
+  status: z.enum(STORY_STATUSES),
 })
 
 export const taskSchema = z.object({
@@ -16,12 +24,24 @@ export const taskSchema = z.object({
     .string()
     .trim()
     .min(10, "La descripción debe tener al menos 10 caracteres"),
-  estimate: z.number().int().min(1, "La estimación mínima es 1 hora"),
-  status: z.enum(["todo", "in-progress", "done"]),
-  profileIds: z
+  estimateHours: z.number().int().min(1, "La estimación mínima es 1 hora"),
+  status: z.enum(TASK_STATUSES),
+  responsibleProfileIds: z
     .array(z.string())
     .min(1, "Selecciona al menos un perfil técnico"),
 })
 
-export type StoryFormValues = z.infer<typeof storySchema>
-export type TaskFormValues = z.infer<typeof taskSchema>
+export type StoryFormValues = {
+  title: string
+  description: string
+  priority: StoryPriority
+  status: StoryStatus
+}
+
+export type TaskFormValues = {
+  title: string
+  description: string
+  estimateHours: number
+  status: TaskStatus
+  responsibleProfileIds: string[]
+}
