@@ -73,7 +73,9 @@ export const NumberInput = ({
       aria-invalid={invalid}
       className={cn(
         "border-input bg-background dark:bg-input/30 has-focus-visible:border-ring has-focus-visible:ring-ring/25 aria-invalid:border-destructive flex h-8 w-full overflow-hidden rounded-md border has-focus-visible:ring-1",
-        disabled ? "opacity-50" : "",
+        disabled
+          ? "bg-muted text-muted-foreground dark:bg-muted/60 cursor-not-allowed opacity-65"
+          : "",
         className
       )}
     >

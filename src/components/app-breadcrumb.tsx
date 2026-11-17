@@ -43,7 +43,7 @@ export const AppBreadcrumb = () => {
     } else {
       const projectId = segments[1]
       const projectLabel =
-        project?.nombre || (isProjectLoading ? "Cargando..." : "Proyecto")
+        project?.name || (isProjectLoading ? "Cargando..." : "Proyecto")
 
       items.push({ label: "Proyectos", href: "/projects" })
 
@@ -90,6 +90,8 @@ export const AppBreadcrumb = () => {
     }
   } else if (segments[0] === "profiles") {
     items.push({ label: "Perfiles técnicos (CER)" })
+  } else if (segments[0] === "dashboard") {
+    items.push({ label: "Dashboard" })
   } else if (segments[0] === "reports") {
     items.push({ label: "Reportes del sistema" })
   } else if (segments[0] === "profile") {

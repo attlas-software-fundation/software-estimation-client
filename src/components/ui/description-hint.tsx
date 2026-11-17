@@ -1,18 +1,18 @@
 type DescriptionHintProps = {
   error: string
   hint: string
-  length: number
-  limit: number
-  invalidCount: boolean
+  length?: number
+  max?: number
 }
 
 export const DescriptionHint = ({
   error,
   hint,
   length,
-  limit,
-  invalidCount,
+  max,
 }: DescriptionHintProps) => {
+  const overMax = max != null && length != null && length > max
+
   return (
     <div className="flex items-center justify-between gap-2">
       {error ? (
@@ -20,15 +20,17 @@ export const DescriptionHint = ({
       ) : (
         <p className="text-muted-foreground text-xs">{hint}</p>
       )}
-      <p
-        className={
-          invalidCount
-            ? "text-destructive text-xs"
-            : "text-muted-foreground text-xs"
-        }
-      >
-        {length}/{limit}
-      </p>
+      {max != null && length != null ? (
+        <p
+          className={
+            overMax
+              ? "text-destructive shrink-0 text-xs tabular-nums"
+              : "text-muted-foreground shrink-0 text-xs tabular-nums"
+          }
+        >
+          {length}/{max}
+        </p>
+      ) : null}
     </div>
   )
 }
