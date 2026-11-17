@@ -1,9 +1,6 @@
 import { requireProjectAction } from "@/features/projects/utils/require-project-action"
-import { storiesService } from "@/features/stories/services/stories-service"
 import { STORY_POINTS_OPTIONS, type StoryPoints } from "../types"
-
-const getAssignmentsKey = (projectId: string) =>
-  `software-estimation:story-points:${projectId}`
+import { estimationApi, type StoryApiResponse } from "./estimation-api"
 
 export type UserStoryItem = {
   id: string
@@ -15,44 +12,50 @@ export type UserStoryItem = {
 const isStoryPoints = (value: number): value is StoryPoints =>
   STORY_POINTS_OPTIONS.includes(value as StoryPoints)
 
-export const getStoryPointsAssignments = async (
-  projectId: string
-): Promise<Record<string, StoryPoints>> => {
-  if (typeof window === "undefined") return {}
-
-  const storedPoints = localStorage.getItem(getAssignmentsKey(projectId))
-  if (!storedPoints) return {}
-
-  try {
-    const parsed = JSON.parse(storedPoints) as Record<string, number>
-    const assignments: Record<string, StoryPoints> = {}
-
-    Object.entries(parsed).forEach(([storyId, value]) => {
-      const points = Number(value)
-      if (isStoryPoints(points)) {
-        assignments[storyId] = points
-      }
-    })
-
-    return assignments
-  } catch {
-    return {}
-  }
+const toStoryPoints = (value: number | null): StoryPoints | 0 => {
+  const points = Number(value ?? 0)
+  return isStoryPoints(points) ? points : 0
 }
 
 export const getUserStories = async (
   projectId: string
 ): Promise<UserStoryItem[]> => {
-  const backlog = await storiesService.getStories(projectId)
-  const assignments = await getStoryPointsAssignments(projectId)
+  const stories = await estimationApi.listStories(projectId)
 
-  return backlog.stories.map((story) => ({
+  return stories.map((story) => ({
     id: story.id,
     code: story.code,
     title: story.title,
-    storyPoints: assignments[story.id] ?? 0,
+    storyPoints: toStoryPoints(story.storyPoints),
   }))
 }
+
+export const getStoryPointsAssignments = async (
+  projectId: string
+): Promise<Record<string, StoryPoints>> => {
+  const stories = await getUserStories(projectId)
+  const assignments: Record<string, StoryPoints> = {}
+
+  stories.forEach((story) => {
+    if (story.storyPoints > 0) {
+      assignments[story.id] = story.storyPoints as StoryPoints
+    }
+  })
+
+  return assignments
+}
+
+// PUT /user-stories/{id} exige code, title y description, por eso se lee la
+// historia actual y se reenvía completa con los nuevos puntos.
+const toStoryUpdate = (story: StoryApiResponse, storyPoints: number) => ({
+  code: story.code,
+  title: story.title,
+  description: story.description,
+  acceptanceCriteria: story.acceptanceCriteria ?? undefined,
+  priority: story.priority,
+  status: story.status,
+  storyPoints,
+})
 
 export const assignStoryPoints = async (
   projectId: string,
@@ -60,14 +63,8 @@ export const assignStoryPoints = async (
   storyPoints: StoryPoints
 ): Promise<void> => {
   await requireProjectAction(projectId, "editEstimation")
-  if (typeof window === "undefined") return
-
-  const currentPoints = await getStoryPointsAssignments(projectId)
-  currentPoints[storyId] = storyPoints
-  localStorage.setItem(
-    getAssignmentsKey(projectId),
-    JSON.stringify(currentPoints)
-  )
+  const story = await estimationApi.getStory(storyId)
+  await estimationApi.updateStory(storyId, toStoryUpdate(story, storyPoints))
 }
 
 export const userStoriesService = {

@@ -1,7 +1,6 @@
 import type { SprintCalculationResult } from "../types"
+import { estimationApi } from "./estimation-api"
 import { sprintConfigService } from "./sprint-config.service"
-import { getTaskHourEntries } from "./task-hours.service"
-import { getUserStories } from "./user-stories.service"
 
 const EMPTY_CALCULATION: SprintCalculationResult = {
   totalStoryPoints: 0,
@@ -24,42 +23,22 @@ export const calculateSprintsAndProjectTime = async (
     return EMPTY_CALCULATION
   }
 
-  const config = await sprintConfigService.get(projectId)
-  const stories = await getUserStories(projectId)
-  const hourEntries = await getTaskHourEntries(projectId)
-  const totalStoryPoints = stories.reduce(
-    (sum, story) => sum + Number(story.storyPoints),
-    0
-  )
-  const storiesWithPoints = stories.filter(
-    (story) => story.storyPoints > 0
-  ).length
-  const velocity = Math.max(config.velocity, 1)
-  const sprintDuration = Math.max(config.duration, 1)
-  const totalSprints =
-    totalStoryPoints > 0 ? Math.ceil(totalStoryPoints / velocity) : 0
-  const taskIds = new Set(hourEntries.map((entry) => entry.taskId))
-  const tasksWithHours = new Set(
-    hourEntries
-      .filter((entry) => entry.estimatedHours > 0)
-      .map((entry) => entry.taskId)
-  ).size
-  const totalEffortHours = hourEntries.reduce(
-    (sum, entry) => sum + entry.estimatedHours,
-    0
-  )
+  const [summary, config] = await Promise.all([
+    estimationApi.getSummary(projectId),
+    sprintConfigService.get(projectId),
+  ])
 
   return {
-    totalStoryPoints,
-    storiesTotal: stories.length,
-    storiesWithPoints,
-    velocity,
-    sprintDuration,
-    sprintUnit: config.unit,
-    totalSprints,
-    totalBaseTime: totalSprints * sprintDuration,
-    totalEffortHours: Number(totalEffortHours.toFixed(2)),
-    tasksTotal: taskIds.size,
-    tasksWithHours,
+    totalStoryPoints: summary.baseEffortPoints ?? 0,
+    storiesTotal: summary.storiesTotal ?? 0,
+    storiesWithPoints: summary.storiesWithPoints ?? 0,
+    velocity: Math.max(config.velocity, 1),
+    sprintDuration: Math.max(config.duration, 1),
+    sprintUnit: summary.timeUnit === "WEEKS" ? "semanas" : "dias",
+    totalSprints: summary.totalSprints ?? 0,
+    totalBaseTime: summary.baseTime ?? 0,
+    totalEffortHours: Number((summary.totalEffortHours ?? 0).toFixed(2)),
+    tasksTotal: summary.tasksTotal ?? 0,
+    tasksWithHours: summary.tasksWithHours ?? 0,
   }
 }
