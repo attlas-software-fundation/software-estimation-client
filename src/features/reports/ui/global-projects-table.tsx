@@ -1,6 +1,7 @@
 "use client"
 
-import { BarChart2Icon } from "lucide-react"
+import Link from "next/link"
+import { ChartColumnIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   Table,
@@ -13,79 +14,78 @@ import {
 import { formatCurrency } from "@/lib/format"
 import { timeUnitLabel } from "@/lib/calendar-time"
 import { TableEmptyState } from "@/components/table-empty-state"
-import type { ProjectReportSummary } from "../types"
+import { PROJECT_TYPE_BY_VALUE } from "@/enumeration/project-type"
+import type { Project } from "@/features/projects/types"
+import { cn } from "@/lib/utils"
 import {
   projectStatusLabel,
   projectStatusVariant,
-  projectTypeLabel,
-  riskLevelLabel,
-  riskLevelVariant,
 } from "../utils/report-labels"
 
 type GlobalProjectsTableProps = {
-  summaries: ProjectReportSummary[]
+  projects: Project[]
 }
 
-export const GlobalProjectsTable = ({
-  summaries,
-}: GlobalProjectsTableProps) => {
-  if (summaries.length === 0) {
+export const GlobalProjectsTable = ({ projects }: GlobalProjectsTableProps) => {
+  if (projects.length === 0) {
     return (
       <TableEmptyState
         message="No hay proyectos registrados."
-        icon={BarChart2Icon}
+        icon={ChartColumnIcon}
       />
     )
   }
 
   return (
     <Table>
-      <TableHeader>
-        <TableRow>
+      <TableHeader className="bg-slate-100 [&_th]:border-b-2 [&_th]:border-slate-300 [&_tr]:border-b-2 [&_tr]:border-slate-300">
+        <TableRow className="hover:bg-transparent">
           <TableHead>Proyecto</TableHead>
           <TableHead>Estado</TableHead>
           <TableHead>Puntos</TableHead>
-          <TableHead>Tiempo base</TableHead>
-          <TableHead>Riesgo</TableHead>
+          <TableHead>Esfuerzo</TableHead>
+          <TableHead>Tiempo total</TableHead>
           <TableHead>Costo total</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {summaries.map((summary) => {
-          const estimate = summary.latestEstimate
+        {projects.map((project) => {
+          const estimate = project.estimations[0] || null
 
           return (
-            <TableRow key={summary.projectId}>
+            <TableRow
+              key={project.id}
+              className="border-0 [&_td]:border-b [&_td]:border-slate-300"
+            >
               <TableCell>
                 <div className="flex flex-col items-start gap-1">
-                  <span className="font-medium">{summary.projectName}</span>
-                  {summary.projectType.length > 0 ? (
-                    <Badge
-                      variant="outline"
-                      size="sm"
-                      className="h-4 px-1.5 font-normal"
-                    >
-                      {projectTypeLabel(summary.projectType)}
-                    </Badge>
-                  ) : null}
+                  <Link
+                    href={`/projects/${project.id}/reports`}
+                    className="hover:text-primary font-medium transition-colors hover:underline"
+                  >
+                    {project.name}
+                  </Link>
+                  <span
+                    className={cn(
+                      "text-xs font-medium",
+                      PROJECT_TYPE_BY_VALUE[project.type].color
+                    )}
+                  >
+                    {PROJECT_TYPE_BY_VALUE[project.type].label}
+                  </span>
                 </div>
               </TableCell>
               <TableCell>
-                <Badge variant={projectStatusVariant(summary.projectStatus)}>
-                  {projectStatusLabel(summary.projectStatus)}
+                <Badge variant={projectStatusVariant(project.status)}>
+                  {projectStatusLabel(project.status)}
                 </Badge>
               </TableCell>
               {estimate !== null ? (
                 <>
-                  <TableCell>{estimate.baseEffortPoints}</TableCell>
+                  <TableCell>{estimate.baseEffortPoints} SP</TableCell>
+                  <TableCell>{estimate.totalEffortHours} h</TableCell>
                   <TableCell>
-                    {estimate.baseTime} {timeUnitLabel(estimate.timeUnit)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={riskLevelVariant(estimate.riskLevel)}>
-                      {riskLevelLabel(estimate.riskLevel)} (
-                      {estimate.contingencyMarginPercentage}%)
-                    </Badge>
+                    {estimate.totalTime} {timeUnitLabel(estimate.timeUnit)}
                   </TableCell>
                   <TableCell>{formatCurrency(estimate.totalCost)}</TableCell>
                 </>

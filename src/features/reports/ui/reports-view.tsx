@@ -4,13 +4,7 @@ import { useState } from "react"
 import { FileDownIcon, SaveIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "@/components/ui/toast"
 import { getErrorMessage } from "@/lib/form-errors"
 import {
@@ -19,9 +13,7 @@ import {
   useReportsHistory,
   useSaveReportSnapshot,
 } from "../hooks/use-reports"
-import type { ReportSnapshot } from "../types"
 import { useProjectAccess } from "@/features/projects/hooks/use-project-access"
-import { ReportFactSheet } from "./report-fact-sheet"
 import { ReportHistoryTable } from "./report-history-table"
 import { ReportSummaryCards } from "./report-summary-cards"
 
@@ -34,9 +26,12 @@ export const ReportsView = ({ projectId }: ReportsViewProps) => {
     useLatestEstimate(projectId)
   const { data: history, isLoading: historyLoading } =
     useReportsHistory(projectId)
-  const saveSnapshot = useSaveReportSnapshot()
-  const exportPdf = useExportProjectReportPdf()
+  const saveSnapshot = useSaveReportSnapshot(projectId)
   const access = useProjectAccess(projectId)
+  const exportPdf = useExportProjectReportPdf(
+    projectId,
+    access.project ? access.project.name : ""
+  )
   const [exportingId, setExportingId] = useState("")
 
   const handleSave = async () => {
@@ -44,10 +39,10 @@ export const ReportsView = ({ projectId }: ReportsViewProps) => {
       return
     }
     try {
-      await saveSnapshot.mutateAsync(latest)
+      await saveSnapshot.mutateAsync()
       toast.add({
         title: "Estimación guardada",
-        description: "Se guardó en el historial.",
+        description: "Se registró la estimación en el historial del proyecto.",
         type: "success",
       })
     } catch (error) {
@@ -59,11 +54,11 @@ export const ReportsView = ({ projectId }: ReportsViewProps) => {
     }
   }
 
-  const handleExport = async (snapshot: ReportSnapshot) => {
-    const rowId = snapshot.id.length > 0 ? snapshot.id : snapshot.createdAt
+  const handleExport = async (estimationId?: string) => {
+    const rowId = estimationId || "latest"
     setExportingId(rowId)
     try {
-      await exportPdf.mutateAsync(snapshot)
+      await exportPdf.mutateAsync(estimationId)
       toast.add({
         title: "PDF generado",
         description: "El PDF se descargó.",
@@ -102,13 +97,7 @@ export const ReportsView = ({ projectId }: ReportsViewProps) => {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Reportes del proyecto
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Consolida puntos, tiempo calendario, horas × CER y el margen de
-            riesgo guardado.
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight">Reportes</h1>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button
@@ -116,7 +105,9 @@ export const ReportsView = ({ projectId }: ReportsViewProps) => {
             variant="outline"
             disabled={exportingId.length > 0}
             onClick={() => {
-              void handleExport(latest)
+              void handleExport(
+                latest.id || (history && history[0] ? history[0].id : undefined)
+              )
             }}
           >
             <FileDownIcon />
@@ -137,26 +128,20 @@ export const ReportsView = ({ projectId }: ReportsViewProps) => {
 
       <ReportSummaryCards snapshot={latest} />
 
-      <ReportFactSheet snapshot={latest} />
-
       <Card>
         <CardHeader>
-          <CardTitle>Historial de estimaciones</CardTitle>
-          <CardDescription>
-            Cada fila es una instantánea guardada. Puedes descargar el PDF de
-            esa estimación.
-          </CardDescription>
+          <CardTitle>Historial</CardTitle>
         </CardHeader>
         <CardContent>
           {historyLoading ? (
             <Skeleton className="h-24 w-full" />
           ) : (
             <ReportHistoryTable
-              snapshots={history ?? []}
-              emptyLabel="Aún no hay estimaciones guardadas en el historial."
+              estimations={history || []}
+              emptyLabel="Sin estimaciones guardadas."
               exportingId={exportingId}
-              onExport={(snapshot) => {
-                void handleExport(snapshot)
+              onExport={(estimation) => {
+                void handleExport(estimation.id)
               }}
             />
           )}

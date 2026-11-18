@@ -1,12 +1,7 @@
 "use client"
 
-import {
-  CalculatorIcon,
-  FileDownIcon,
-  FileTextIcon,
-  FolderKanbanIcon,
-  TrendingUpIcon,
-} from "lucide-react"
+import { ChartColumnIcon, FileSpreadsheetIcon } from "lucide-react"
+import { DataTable } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -15,56 +10,59 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/components/ui/toast"
+import { usePagination } from "@/hooks"
 import { getErrorMessage } from "@/lib/form-errors"
-import { formatCurrency } from "@/lib/format"
-import {
-  useExportSystemReportPdf,
-  useGlobalSystemReports,
-} from "../hooks/use-global-reports"
+import { TABLE_PAGE_SIZE } from "@/lib/pagination"
+import { useProjects } from "@/features/projects/hooks/use-projects"
+import type { ProjectSearchResponse } from "@/features/projects/types"
+import type { QueryRequest } from "@/types/api"
+import { useExportProjectsExcel } from "../hooks/use-global-reports"
 import { GlobalProjectsTable } from "./global-projects-table"
 
-export const GlobalReportsView = () => {
-  const { data: report, isLoading } = useGlobalSystemReports()
-  const exportPdf = useExportSystemReportPdf()
+const emptyPage: ProjectSearchResponse = {
+  projectResponse: [],
+  pageSize: TABLE_PAGE_SIZE,
+  pageNumber: 0,
+  totalPages: 0,
+  totalElements: 0,
+  hasNext: false,
+  hasPrevious: false,
+}
 
-  const handleExport = async () => {
-    if (!report) {
-      return
-    }
+export const GlobalReportsView = () => {
+  const { pageNumber, pageSize, setPageNumber } = usePagination()
+
+  const query: QueryRequest = {
+    filters: [],
+    pagination: {
+      pageNumber,
+      pageSize,
+      orderBy: "createdAt",
+      sortDirection: "DESC",
+    },
+  }
+
+  const { data, isLoading, isError } = useProjects(query)
+  const pagination = data || emptyPage
+  const projects = pagination.projectResponse
+  const exportExcel = useExportProjectsExcel()
+
+  const handleExportExcel = async () => {
     try {
-      await exportPdf.mutateAsync(report)
+      await exportExcel.mutateAsync()
       toast.add({
-        title: "PDF generado",
-        description: "El PDF se descargó.",
+        title: "Excel generado",
+        description: "El archivo proyectos.xlsx se descargó.",
         type: "success",
       })
     } catch (error) {
       toast.add({
-        title: "No se pudo generar el PDF",
+        title: "No se pudo exportar a Excel",
         description: getErrorMessage(error, "Inténtalo de nuevo."),
         type: "error",
       })
     }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-10 w-80" />
-        <Skeleton className="h-28 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    )
-  }
-
-  if (!report) {
-    return (
-      <p className="text-muted-foreground text-sm">
-        No se pudo cargar el reporte del sistema.
-      </p>
-    )
   }
 
   return (
@@ -75,95 +73,22 @@ export const GlobalReportsView = () => {
             Reportes del sistema
           </h1>
           <p className="text-muted-foreground text-sm">
-            Totales actuales de todos los proyectos.
+            Listado de proyectos y exportación a Excel.
           </p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={exportPdf.isPending}
-          onClick={() => {
-            void handleExport()
-          }}
-        >
-          <FileDownIcon />
-          Descargar PDF
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Proyectos - Teal (Verde medio celeste) sólido */}
-        <Card className="border-0 bg-teal-600 text-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-teal-100">
-              Proyectos
-            </CardTitle>
-            <FolderKanbanIcon className="size-5 text-white/90" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold tracking-tight text-white">
-              {report.totalProjects}
-            </p>
-            <p className="mt-1 text-xs text-teal-100/80">
-              {report.totalEstimatesCompleted} con estimación
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Puntos de historia - Violeta oscuro / Mora sólido */}
-        <Card className="border-0 bg-violet-800 text-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-purple-100">
-              Puntos de historia
-            </CardTitle>
-            <CalculatorIcon className="size-5 text-white/90" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold tracking-tight text-white">
-              {report.totalSystemStoryPoints}
-            </p>
-            <p className="mt-1 text-xs text-purple-100/80">
-              Total acumulado del sistema
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Tiempo base - Ámbar / Miel sólido */}
-        <Card className="border-0 bg-amber-600 text-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-amber-100">
-              Tiempo base
-            </CardTitle>
-            <FileTextIcon className="size-5 text-white/90" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold tracking-tight text-white">
-              {report.totalSystemBaseTime.toFixed(1)} días
-            </p>
-            <p className="mt-1 text-xs text-amber-100/80">
-              Suma de todos los proyectos
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Costo total - Carbón grafito / Pizarra sólido */}
-        <Card className="border-0 bg-slate-800 text-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-200">
-              Costo total
-            </CardTitle>
-            <TrendingUpIcon className="size-5 text-white/90" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold tracking-tight text-white">
-              {formatCurrency(report.totalSystemCost)}
-            </p>
-            <p className="mt-1 text-xs text-slate-300">
-              Incluye {formatCurrency(report.totalSystemContingencyCost)} de
-              contingencia
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={exportExcel.isPending}
+            onClick={() => {
+              void handleExportExcel()
+            }}
+          >
+            <FileSpreadsheetIcon />
+            Exportar Excel
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -174,7 +99,18 @@ export const GlobalReportsView = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <GlobalProjectsTable summaries={report.projectSummaries} />
+          <DataTable
+            isLoading={isLoading}
+            isError={isError}
+            errorMessage="No se pudieron cargar los proyectos."
+            isEmpty={projects.length === 0}
+            emptyIcon={ChartColumnIcon}
+            emptyMessage="No hay proyectos registrados."
+            pagination={pagination}
+            onPageChange={setPageNumber}
+          >
+            <GlobalProjectsTable projects={projects} />
+          </DataTable>
         </CardContent>
       </Card>
     </div>
