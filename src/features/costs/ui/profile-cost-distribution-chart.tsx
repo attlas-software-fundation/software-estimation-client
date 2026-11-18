@@ -42,7 +42,10 @@ export const ProfileCostDistributionChart = ({
             }).format(share)
 
             return (
-              <li key={profile.profileId} className="space-y-1.5">
+              <li
+                key={profile.profileId}
+                className="space-y-2 border-t border-slate-200 pt-4 first:border-t-0 first:pt-0"
+              >
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
                   <span className="min-w-0 font-medium break-all">
                     {profile.profileName}

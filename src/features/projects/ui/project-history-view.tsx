@@ -7,7 +7,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import {
   PROJECT_STATUS_LABELS,
   PROJECT_STATUS_VARIANTS,
-  toProjectStatus,
 } from "../types/project-status"
 import { useProjectStatusHistory } from "../hooks/use-project-status-history"
 
@@ -58,7 +57,6 @@ export const ProjectHistoryView = ({ projectId }: ProjectHistoryViewProps) => {
     )
   }
 
-  // Asegurar orden descendente por fecha
   const sortedHistory = [...history].sort(
     (a, b) => new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime()
   )
@@ -68,19 +66,15 @@ export const ProjectHistoryView = ({ projectId }: ProjectHistoryViewProps) => {
       <div className="border-border relative ml-3 space-y-6 border-l pl-6">
         {sortedHistory.map((entry) => {
           const prevStatus = entry.previousStatus
-            ? toProjectStatus(entry.previousStatus)
-            : null
-          const nextStatus = toProjectStatus(entry.newStatus)
+          const nextStatus = entry.newStatus
           const isInitial = !entry.previousStatus
 
           const authorName =
-            `${entry.changedByFirstName || ""} ${entry.changedByLastName || ""}`.trim() ||
-            entry.changedByEmail ||
-            "Usuario del sistema"
+            `${entry.changedByFirstName} ${entry.changedByLastName}`.trim() ||
+            entry.changedByEmail
 
           return (
             <div key={entry.id} className="relative">
-              {/* Punto en la línea de tiempo */}
               <span className="bg-primary ring-background absolute top-1.5 -left-[31px] size-3 rounded-full ring-4" />
 
               <Card className="shadow-xs transition-shadow hover:shadow-sm">
@@ -107,7 +101,6 @@ export const ProjectHistoryView = ({ projectId }: ProjectHistoryViewProps) => {
                   </div>
 
                   <div className="flex flex-col justify-between gap-3 pt-1 sm:flex-row sm:items-center">
-                    {/* Estados */}
                     <div className="flex flex-wrap items-center gap-2">
                       {isInitial ? (
                         <div className="flex items-center gap-2">
@@ -135,7 +128,6 @@ export const ProjectHistoryView = ({ projectId }: ProjectHistoryViewProps) => {
                       )}
                     </div>
 
-                    {/* Autor */}
                     <div className="text-muted-foreground flex items-center gap-2 text-xs">
                       <div className="bg-muted flex size-6 items-center justify-center rounded-full">
                         <UserIcon className="text-muted-foreground size-3.5" />

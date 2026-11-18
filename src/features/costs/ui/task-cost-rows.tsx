@@ -5,14 +5,17 @@ import { CostProfileIdentity } from "./cost-profile-identity"
 
 type TaskCostRowsProps = {
   task: TaskCost
+  taskIndex: number
 }
 
-export const TaskCostRows = ({ task }: TaskCostRowsProps) => {
+export const TaskCostRows = ({ task, taskIndex }: TaskCostRowsProps) => {
   const contributions = task.contributions ?? []
+  const groupTone = taskIndex % 2 === 0 ? "bg-slate-50" : "bg-white"
+  const taskSplit = taskIndex > 0 ? "border-t-2 border-t-slate-400" : ""
 
   if (contributions.length === 0) {
     return (
-      <TableRow>
+      <TableRow className={`${groupTone} ${taskSplit} hover:bg-slate-100`}>
         <TableCell className="font-medium">{task.taskName}</TableCell>
         <TableCell>
           <div className="flex flex-col gap-2">
@@ -39,11 +42,14 @@ export const TaskCostRows = ({ task }: TaskCostRowsProps) => {
   }
 
   return contributions.map((contribution, index) => (
-    <TableRow key={contribution.technicalProfileId}>
+    <TableRow
+      key={contribution.technicalProfileId}
+      className={`${groupTone} ${index === 0 ? taskSplit : "border-slate-200"} hover:bg-slate-100`}
+    >
       {index === 0 && (
         <TableCell
           rowSpan={contributions.length}
-          className="align-top font-medium"
+          className="border-r border-slate-200 align-top font-medium"
         >
           {task.taskName}
           <span className="text-muted-foreground mt-1 block text-xs">
@@ -51,7 +57,13 @@ export const TaskCostRows = ({ task }: TaskCostRowsProps) => {
           </span>
         </TableCell>
       )}
-      <TableCell>{contribution.technicalProfileId}</TableCell>
+      <TableCell>
+        <CostProfileIdentity
+          name={contribution.profileName}
+          role={contribution.profileRole}
+          email={contribution.profileEmail}
+        />
+      </TableCell>
       <TableCell className="text-right tabular-nums">
         {contribution.hours} h
       </TableCell>
@@ -65,7 +77,7 @@ export const TaskCostRows = ({ task }: TaskCostRowsProps) => {
       {index === 0 && (
         <TableCell
           rowSpan={contributions.length}
-          className="text-right align-top font-medium tabular-nums"
+          className="border-l border-slate-200 text-right align-top font-semibold tabular-nums"
         >
           {formatCostAmount(task.totalCost, task.currency)}
         </TableCell>

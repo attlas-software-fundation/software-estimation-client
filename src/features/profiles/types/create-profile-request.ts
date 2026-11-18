@@ -1,14 +1,17 @@
 import type {
-  TechnicalProfileApiExperienceLevel,
-  TechnicalProfileApiRole,
-} from "./technical-profile-response"
+  CurrencyCode,
+  ExperienceLevelValue,
+  TechnicalRoleValue,
+} from "@/enumeration"
 
-export interface CreateTechnicalProfileRequest {
+export type CreateTechnicalProfileRequest = {
   name: string
   email: string
-  role: TechnicalProfileApiRole
-  experienceLevel: TechnicalProfileApiExperienceLevel
+  role: TechnicalRoleValue
+  experienceLevel: ExperienceLevelValue
   hourlyRate: number
-  currency: "PEN"
+  currency: CurrencyCode
   isActive: boolean
 }
+
+export type CreateProfilePayload = CreateTechnicalProfileRequest

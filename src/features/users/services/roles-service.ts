@@ -6,11 +6,6 @@ const getRoles = async (activeOnly = true): Promise<RoleResponse[]> => {
   return apiClient.get<RoleResponse[]>(`/api/v1/roles${query}`)
 }
 
-const getRole = async (roleId: string): Promise<RoleResponse> => {
-  return apiClient.get<RoleResponse>(`/api/v1/roles/${roleId}`)
-}
-
 export const rolesService = {
   getRoles,
-  getRole,
 }

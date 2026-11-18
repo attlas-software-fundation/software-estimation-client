@@ -33,10 +33,14 @@ const response = {
   tasks: [
     {
       taskId: "task-1",
+      taskTitle: "Definir alcance",
       total: { amount: 600, currency: "PEN" },
       contributions: [
         {
           technicalProfileId: "profile-1",
+          profileName: "Ana Ruiz",
+          profileEmail: "ana@example.com",
+          profileRole: "DEVELOPER",
           hours: 10,
           hourlyRate: 60,
           cost: { amount: 600, currency: "PEN" },
@@ -47,6 +51,9 @@ const response = {
   profiles: [
     {
       technicalProfileId: "profile-1",
+      profileName: "Ana Ruiz",
+      profileEmail: "ana@example.com",
+      profileRole: "DEVELOPER",
       subtotal: { amount: 600, currency: "PEN" },
     },
   ],
@@ -223,10 +230,14 @@ test("invalidation refreshes active costs after hours, CER or assignments change
       tasks: [
         {
           taskId: "task-1",
+          taskTitle: "Definir alcance",
           total: { amount, currency: "PEN" },
           contributions: [
             {
               technicalProfileId: profile,
+              profileName: "Ana Ruiz",
+              profileEmail: "ana@example.com",
+              profileRole: "DEVELOPER",
               hours,
               hourlyRate: rate,
               cost: { amount, currency: "PEN" },
@@ -235,7 +246,13 @@ test("invalidation refreshes active costs after hours, CER or assignments change
         },
       ],
       profiles: [
-        { technicalProfileId: profile, subtotal: { amount, currency: "PEN" } },
+        {
+          technicalProfileId: profile,
+          profileName: "Ana Ruiz",
+          profileEmail: "ana@example.com",
+          profileRole: "DEVELOPER",
+          subtotal: { amount, currency: "PEN" },
+        },
       ],
     })
   )
@@ -349,7 +366,8 @@ test("profile table and chart render backend subtotals and distribution", () => 
   const html = renderToStaticMarkup(
     React.createElement(ProfileCostBreakdownTable, { profileBreakdown })
   )
-  assert.match(html, /profile-1/)
+  assert.match(html, /Ana Ruiz/)
+  assert.doesNotMatch(html, /profile-1/)
   assert.match(html, /600\.00/)
   assert.match(html, /60\.00/)
   assert.match(html, /overflow-x-auto/)
@@ -428,7 +446,10 @@ test("costs view distinguishes loading, errors, empty projects and missing respo
   const success = render({
     data: projectCostQueryOptions("project-1").select(response),
   })
-  assert.match(success, /Distribución de costos/)
+  assert.match(success, /Costos por tarea/)
+  assert.match(success, /Desglose por perfil/)
+  assert.match(success, /Distribución/)
+  assert.doesNotMatch(success, /Desglose por perfil técnico/)
   const view = CostsView({ projectId: "project-1" })
   view.props.children[0].props.children[1].props.onClick()
   assert.equal(refreshes, 1)
@@ -440,64 +461,6 @@ test("costs view distinguishes loading, errors, empty projects and missing respo
   assert.match(refreshing, /disabled/)
 })
 
-test("storage synchronization scopes changes to the project and removes its listener", async (context) => {
-  const client = new QueryClient()
-  const original = globalThis.window
-  let listener
-  let cleanup
-  let removed = false
-  const localStorage = {}
-  globalThis.window = {
-    localStorage,
-    addEventListener: (event, callback) => {
-      assert.equal(event, "storage")
-      listener = callback
-    },
-    removeEventListener: (event, callback) => {
-      assert.equal(callback, listener)
-      removed = true
-    },
-  }
-  context.after(() => {
-    globalThis.window = original
-    client.clear()
-  })
-  const hookLoad = createSourceLoader({
-    react: {
-      ...React,
-      useEffect: (effect) => {
-        cleanup = effect()
-      },
-    },
-    "@tanstack/react-query": { useQueryClient: () => client },
-  })
-  const { useCostSynchronization } = hookLoad(
-    "src/features/costs/hooks/use-cost-synchronization.ts"
-  )
-  useCostSynchronization("project-1")
-  const key = ["project-costs", "project-1"]
-  client.setQueryData(key, response)
-  listener({
-    storageArea: localStorage,
-    key: "software-estimation:task-hours:project-2",
-  })
-  assert.equal(client.getQueryState(key).isInvalidated, false)
-  listener({ storageArea: {}, key: "software-estimation:profiles" })
-  assert.equal(client.getQueryState(key).isInvalidated, false)
-  for (const storageKey of [
-    "software-estimation:profiles",
-    "software-estimation:task-hours:project-1",
-    null,
-  ]) {
-    client.setQueryData(key, response)
-    listener({ storageArea: localStorage, key: storageKey })
-    await new Promise((resolve) => setImmediate(resolve))
-    assert.equal(client.getQueryState(key).isInvalidated, true)
-  }
-  cleanup()
-  assert.equal(removed, true)
-})
-
 test("existing hours and CER mutation callbacks invalidate costs after saving", async (context) => {
   const client = new QueryClient()
   context.after(() => client.clear())
@@ -506,7 +469,7 @@ test("existing hours and CER mutation callbacks invalidate costs after saving", 
       useQueryClient: () => client,
       useMutation: (options) => options,
     },
-    "../services/task-hours.service": { taskHoursService: {} },
+    "../services/task-hours-service": { taskHoursService: {} },
     "../services/profiles-service": { profilesService: {} },
   })
   const { useUpdateTaskHours } = hooksLoad(

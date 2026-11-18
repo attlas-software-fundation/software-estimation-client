@@ -6,22 +6,14 @@ export const useUpdateProjectStatus = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({
-      id,
-      status,
-      estado,
-    }: {
-      id: string
-      status?: string
-      estado?: string
-    }) => projectService.updateProjectStatus(id, (status ?? estado)!),
+    mutationFn: projectService.updateProjectStatus,
     onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({ queryKey: projectQueryKeys.all })
       void queryClient.invalidateQueries({
-        queryKey: projectQueryKeys.detail(variables.id),
+        queryKey: projectQueryKeys.detail(variables.projectId),
       })
       void queryClient.invalidateQueries({
-        queryKey: projectQueryKeys.statusHistory(variables.id),
+        queryKey: projectQueryKeys.statusHistory(variables.projectId),
       })
     },
   })

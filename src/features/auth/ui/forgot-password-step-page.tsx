@@ -9,11 +9,11 @@ type ForgotPasswordStepPageProps = {
 }
 
 const getSearchValue = (value: string | string[] | undefined) => {
-  if (typeof value === "string") {
-    return value
+  if (!value || Array.isArray(value)) {
+    return ""
   }
 
-  return ""
+  return value
 }
 
 export const ForgotPasswordStepPage = async ({

@@ -1,19 +1,20 @@
 export type SortDirection = "ASC" | "DESC"
 
-export const FilterOperator = {
-  EQ: "EQ",
-  NE: "NE",
-  LK: "LK",
-  IN: "IN",
-  GT: "GT",
-  LT: "LT",
-  GE: "GE",
-  LE: "LE",
-  BT: "BT",
-} as const
-
 export type FilterOperatorValue =
-  (typeof FilterOperator)[keyof typeof FilterOperator]
+  "EQ" | "NE" | "LK" | "IN" | "GT" | "LT" | "GE" | "LE" | "BT"
+
+export const FilterOperator: Record<FilterOperatorValue, FilterOperatorValue> =
+  {
+    EQ: "EQ",
+    NE: "NE",
+    LK: "LK",
+    IN: "IN",
+    GT: "GT",
+    LT: "LT",
+    GE: "GE",
+    LE: "LE",
+    BT: "BT",
+  }
 
 export type FilterRequest = {
   key: string

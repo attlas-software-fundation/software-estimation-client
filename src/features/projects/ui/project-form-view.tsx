@@ -13,7 +13,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { useProject } from "../hooks/use-projects"
+import { useProject } from "../hooks/use-project"
 import { ProjectForm } from "./project-form"
 
 const ProjectFormPage = ({
@@ -117,9 +117,7 @@ export const ProjectEditView = ({ projectId }: { projectId: string }) => {
       title={
         <>
           Editar proyecto:{" "}
-          <span className="text-foreground font-extrabold">
-            {project.nombre}
-          </span>
+          <span className="text-foreground font-extrabold">{project.name}</span>
         </>
       }
       description="Modifica los detalles y configuración del proyecto."

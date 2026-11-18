@@ -43,7 +43,7 @@ export const DatePicker = ({
             variant="outline"
             data-empty={!value}
             aria-invalid={invalid}
-            className="data-[empty=true]:text-muted-foreground disabled:bg-muted/40 disabled:text-foreground/85 dark:disabled:bg-muted/30 w-full justify-between text-left font-normal disabled:cursor-not-allowed disabled:opacity-90"
+            className="data-[empty=true]:text-muted-foreground disabled:bg-muted disabled:text-muted-foreground dark:disabled:bg-muted/60 w-full justify-between text-left font-normal disabled:cursor-not-allowed disabled:opacity-65"
           />
         }
       >

@@ -23,7 +23,7 @@ export const RequireAuth = ({ children }: { children: ReactNode }) => {
     }
 
     if (!canAccess) {
-      router.replace("/projects")
+      router.replace("/dashboard")
     }
   }, [canAccess, isLoading, router, session])
 

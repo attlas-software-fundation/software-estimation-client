@@ -16,7 +16,7 @@ export const useLogin = () => {
     },
     onSuccess: (session) => {
       queryClient.setQueryData(authQueryKeys.session, session)
-      router.replace("/projects")
+      router.replace("/dashboard")
     },
   })
 }

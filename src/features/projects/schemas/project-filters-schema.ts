@@ -5,21 +5,21 @@ export const ALL_PROJECT_FILTER_VALUE = "all"
 
 export const projectFiltersSchema = z
   .object({
-    nombre: z.string(),
-    tipo: z.string(),
-    responsable: z.string(),
-    estado: z.string(),
-    fecha_inicio: z.date().or(z.undefined()),
-    fecha_fin: z.date().or(z.undefined()),
+    name: z.string(),
+    type: z.string(),
+    responsibleId: z.string(),
+    status: z.string(),
+    startDate: z.date().or(z.undefined()),
+    plannedDate: z.date().or(z.undefined()),
   })
   .superRefine((data, ctx) => {
     refineDateRange(
       ctx,
-      data.fecha_inicio,
-      data.fecha_fin,
+      data.startDate,
+      data.plannedDate,
       {
-        start: ["fecha_inicio"],
-        end: ["fecha_fin"],
+        start: ["startDate"],
+        end: ["plannedDate"],
       },
       { required: false }
     )

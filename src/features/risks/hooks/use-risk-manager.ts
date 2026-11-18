@@ -7,8 +7,13 @@ import {
   DEFAULT_RISK_LEVEL,
   getRiskDefaultMargin,
   type RiskLevel,
-} from "@/enumeration/risk-level"
+} from "@/enumeration"
 import { riskService } from "../services/risk-service"
+import type {
+  AiRiskPredictionResponse,
+  EstimationImpact,
+  RiskConfigResponse,
+} from "../types"
 
 type UseRiskManagerProps = {
   projectId: string
@@ -21,6 +26,25 @@ export const RISK_CONFIG_QUERY_KEY = ["risk-config"]
 const DEFAULT_LEVEL: RiskLevel = DEFAULT_RISK_LEVEL
 const DEFAULT_MARGIN = getRiskDefaultMargin(DEFAULT_RISK_LEVEL)
 
+const calculateImpact = (
+  baseTime: number,
+  baseCost: number,
+  margin: number
+): EstimationImpact => {
+  const factor = margin / 100
+  const contingencyTime = baseTime * factor
+  const contingencyCost = baseCost * factor
+
+  return {
+    originalTime: baseTime,
+    originalCost: baseCost,
+    contingencyTime,
+    contingencyCost,
+    totalTime: baseTime + contingencyTime,
+    totalCost: baseCost + contingencyCost,
+  }
+}
+
 export const useRiskManager = ({
   projectId,
   baseTime,
@@ -30,6 +54,8 @@ export const useRiskManager = ({
   const { data: savedConfig, isLoading } = useQuery({
     queryKey: [...RISK_CONFIG_QUERY_KEY, projectId],
     queryFn: () => riskService.getConfig(projectId),
+    enabled: Boolean(projectId),
+    retry: false,
   })
   const [isDirty, setIsDirty] = useState(false)
   const [draftLevel, setDraftLevel] = useState<RiskLevel>(DEFAULT_LEVEL)
@@ -44,7 +70,8 @@ export const useRiskManager = ({
 
   const saveConfig = useMutation({
     mutationFn: () =>
-      riskService.saveConfig(projectId, {
+      riskService.updateConfig({
+        projectId,
         level,
         contingencyMargin: margin,
       }),
@@ -57,13 +84,24 @@ export const useRiskManager = ({
     },
   })
 
+  const predictRisk = useMutation({
+    mutationFn: () => riskService.predictRisk(projectId),
+    onSuccess: (predicted: AiRiskPredictionResponse) => {
+      setDraftLevel(predicted.predicted_risk_level)
+      setDraftMargin(
+        Number(predicted.recommended_contingency_margin.toFixed(2))
+      )
+      setIsDirty(true)
+    },
+  })
+
   const impact = useMemo(() => {
-    return riskService.calculateImpact(baseTime, baseCost, margin)
+    return calculateImpact(baseTime, baseCost, margin)
   }, [baseTime, baseCost, margin])
 
   const handleLevelChange = (newLevel: RiskLevel) => {
     setDraftLevel(newLevel)
-    setDraftMargin(riskService.getDefaultMargin(newLevel))
+    setDraftMargin(getRiskDefaultMargin(newLevel))
     setIsDirty(true)
   }
 
@@ -84,10 +122,13 @@ export const useRiskManager = ({
     margin,
     impact,
     isLoading,
+    hasSavedConfig: savedConfig?.saved === true,
     isSaving: saveConfig.isPending,
+    isPredicting: predictRisk.isPending,
     handleLevelChange,
     handleMarginChange,
     saveConfig,
+    predictRisk,
     handleCancel,
   }
 }

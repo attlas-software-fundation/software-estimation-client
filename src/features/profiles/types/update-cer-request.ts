@@ -1,6 +1,10 @@
-import type { CurrencyCode } from "@/lib/format"
+import type { CurrencyCode } from "@/enumeration"
 
-export interface UpdateCerRequest {
+export type UpdateCerRequest = {
   hourlyRate: number
-  currency?: CurrencyCode | string
+  currency?: CurrencyCode
+}
+
+export type UpdateCerPayload = UpdateCerRequest & {
+  id: string
 }

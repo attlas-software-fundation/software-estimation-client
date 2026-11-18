@@ -42,23 +42,32 @@ export const ProfileCostBreakdownTable = ({
           />
         ) : (
           <Table aria-label="Desglose de costos por perfil técnico">
-            <TableHeader>
-              <TableRow>
-                <TableHead scope="col">Perfil técnico (ID)</TableHead>
-                <TableHead scope="col" className="text-right">
+            <TableHeader className="bg-slate-100 [&_tr]:border-b-2 [&_tr]:border-slate-300 [&_tr]:hover:bg-transparent">
+              <TableRow className="hover:bg-transparent">
+                <TableHead scope="col" className="text-slate-700">
+                  Perfil técnico
+                </TableHead>
+                <TableHead scope="col" className="text-right text-slate-700">
                   Horas totales
                 </TableHead>
-                <TableHead scope="col" className="text-right">
+                <TableHead scope="col" className="text-right text-slate-700">
                   CER por hora
                 </TableHead>
-                <TableHead scope="col" className="text-right">
+                <TableHead scope="col" className="text-right text-slate-700">
                   Costo total
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {profileBreakdown.map((profile) => (
-                <TableRow key={profile.profileId}>
+              {profileBreakdown.map((profile, index) => (
+                <TableRow
+                  key={profile.profileId}
+                  className={
+                    index === 0
+                      ? "border-b border-slate-200"
+                      : "border-t-2 border-b border-t-slate-300 border-b-slate-200"
+                  }
+                >
                   <TableCell>
                     <CostProfileIdentity
                       name={profile.profileName}
@@ -74,7 +83,7 @@ export const ProfileCostBreakdownTable = ({
                       ? "Variable por contribución"
                       : `${formatCostAmount(profile.cer, profile.currency)} / h`}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="text-right font-semibold tabular-nums">
                     {formatCostAmount(profile.totalCost, profile.currency)}
                   </TableCell>
                 </TableRow>
