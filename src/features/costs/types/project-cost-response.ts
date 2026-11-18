@@ -7,6 +7,9 @@ export type CostAmountResponse = {
 
 export type TaskProfileCostResponse = {
   technicalProfileId: string
+  profileName: string
+  profileEmail: string
+  profileRole: string
   hours: number
   hourlyRate: number
   cost: CostAmountResponse
@@ -14,12 +17,16 @@ export type TaskProfileCostResponse = {
 
 export type TaskCostResponse = {
   taskId: string
+  taskTitle: string
   total: CostAmountResponse
   contributions: TaskProfileCostResponse[]
 }
 
 export type ProfileCostResponse = {
   technicalProfileId: string
+  profileName: string
+  profileEmail: string
+  profileRole: string
   subtotal: CostAmountResponse
 }
 

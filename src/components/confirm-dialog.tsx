@@ -1,9 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Loader2Icon, XIcon } from "lucide-react"
-import { Button, type buttonVariants } from "@/components/ui/button"
-import type { VariantProps } from "class-variance-authority"
+import { CheckIcon, Loader2Icon, XIcon } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -15,13 +14,10 @@ import {
 import { cn } from "@/lib/utils"
 
 export type ConfirmDialogTone =
-  | "destructive"
-  | "warning"
-  | "success"
-  | "info"
-  | "neutral"
+  "destructive" | "warning" | "success" | "info" | "neutral"
 
-type ButtonVariant = NonNullable<VariantProps<typeof buttonVariants>["variant"]>
+type ButtonVariant =
+  "default" | "outline" | "secondary" | "ghost" | "destructive" | "link"
 
 const TONE_STYLES: Record<ConfirmDialogTone, string> = {
   destructive: "bg-destructive/10 text-destructive",
@@ -65,7 +61,7 @@ export const ConfirmDialog = ({
   tone,
   confirmText = "Confirmar",
   confirmLoadingText,
-  confirmIcon,
+  confirmIcon = <CheckIcon />,
   cancelText = "Cancelar",
   cancelIcon = <XIcon />,
   confirmVariant = "default",
@@ -136,14 +132,8 @@ export const ConfirmDialog = ({
             disabled={isLoading}
             onClick={handleConfirm}
           >
-            {isLoading ? (
-              <Loader2Icon className="animate-spin" />
-            ) : (
-              confirmIcon
-            )}
-            {isLoading
-              ? (confirmLoadingText ?? confirmText)
-              : confirmText}
+            {isLoading ? <Loader2Icon className="animate-spin" /> : confirmIcon}
+            {isLoading ? (confirmLoadingText ?? confirmText) : confirmText}
           </Button>
         </DialogFooter>
       </DialogContent>

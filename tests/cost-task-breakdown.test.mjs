@@ -12,16 +12,23 @@ const createResponse = () => ({
   tasks: [
     {
       taskId: "task-1",
+      taskTitle: "Definir alcance",
       total: { amount: 700, currency: "PEN" },
       contributions: [
         {
           technicalProfileId: "profile-1",
+          profileName: "Ana Ruiz",
+          profileEmail: "ana@example.com",
+          profileRole: "DEVELOPER",
           hours: 9,
           hourlyRate: 50,
           cost: { amount: 450, currency: "PEN" },
         },
         {
           technicalProfileId: "profile-2",
+          profileName: "Luis Mora",
+          profileEmail: "luis@example.com",
+          profileRole: "QA",
           hours: 5,
           hourlyRate: 50,
           cost: { amount: 250, currency: "PEN" },
@@ -32,10 +39,16 @@ const createResponse = () => ({
   profiles: [
     {
       technicalProfileId: "profile-1",
+      profileName: "Ana Ruiz",
+      profileEmail: "ana@example.com",
+      profileRole: "DEVELOPER",
       subtotal: { amount: 450, currency: "PEN" },
     },
     {
       technicalProfileId: "profile-2",
+      profileName: "Luis Mora",
+      profileEmail: "luis@example.com",
+      profileRole: "QA",
       subtotal: { amount: 250, currency: "PEN" },
     },
   ],
@@ -51,7 +64,10 @@ test("preserves every task contribution and its currency from the API", () => {
   )
   assert.equal(summary.taskCosts[0].currency, "PEN")
   assert.equal(summary.taskCosts[0].totalHours, 14)
-  assert.equal(summary.taskCosts[0].taskName, "task-1")
+  assert.equal(summary.taskCosts[0].taskName, "Definir alcance")
+  assert.equal(summary.taskCosts[0].profiles[0].profileName, "Ana Ruiz")
+  assert.equal(summary.profileBreakdown[0].profileName, "Ana Ruiz")
+  assert.equal(summary.profileBreakdown[0].profileEmail, "ana@example.com")
 })
 
 test("uses supplied costs even when they differ from hours multiplied by CER", () => {
@@ -112,10 +128,14 @@ test("does not present a single CER when profile contributions have different ra
   const response = createResponse()
   response.tasks.push({
     taskId: "task-2",
+    taskTitle: "Revisar estimación",
     total: { amount: 60, currency: "PEN" },
     contributions: [
       {
         technicalProfileId: "profile-1",
+        profileName: "Ana Ruiz",
+        profileEmail: "ana@example.com",
+        profileRole: "DEVELOPER",
         hours: 1,
         hourlyRate: 60,
         cost: { amount: 60, currency: "PEN" },

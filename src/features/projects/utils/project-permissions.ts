@@ -5,29 +5,29 @@ import {
 } from "../types/project-status"
 
 const TRANSITIONS: Record<ProjectStatus, ProjectStatus[]> = {
-  borrador: ["en_evaluacion"],
-  en_evaluacion: ["borrador", "estimado"],
-  estimado: ["en_evaluacion", "aprobado", "rechazado"],
-  aprobado: ["en_ejecucion"],
-  rechazado: ["borrador", "en_evaluacion"],
-  en_ejecucion: ["finalizado"],
-  finalizado: [],
+  DRAFT: ["UNDER_REVIEW"],
+  UNDER_REVIEW: ["DRAFT", "ESTIMATED"],
+  ESTIMATED: ["UNDER_REVIEW", "APPROVED", "REJECTED"],
+  APPROVED: ["IN_PROGRESS"],
+  REJECTED: ["DRAFT", "UNDER_REVIEW"],
+  IN_PROGRESS: ["COMPLETED"],
+  COMPLETED: [],
 }
 
 const HINTS: Record<ProjectStatus, string> = {
-  borrador:
+  DRAFT:
     "Puedes editar los datos generales y el backlog. Pásalo a evaluación para estimar.",
-  en_evaluacion:
+  UNDER_REVIEW:
     "Puedes estimar, ajustar horas, riesgos y guardar reportes. El alcance aún se puede corregir.",
-  estimado:
+  ESTIMATED:
     "La estimación quedó cerrada. Aprueba o rechaza el proyecto, o vuelve a evaluación.",
-  aprobado:
+  APPROVED:
     "El proyecto fue aprobado. Puedes pasarlo a ejecución y consultar reportes.",
-  rechazado:
+  REJECTED:
     "El proyecto fue rechazado. Vuelve a borrador o evaluación para corregirlo.",
-  en_ejecucion:
+  IN_PROGRESS:
     "El proyecto está en ejecución. Solo consulta y reportes. Al terminar, ciérralo.",
-  finalizado: "El proyecto está cerrado. Solo se puede consultar.",
+  COMPLETED: "El proyecto está cerrado. Solo se puede consultar.",
 }
 
 export const getAllowedTransitions = (status: ProjectStatus): ProjectStatus[] =>
@@ -39,25 +39,24 @@ export const canTransitionStatus = (
 ): boolean => from === to || TRANSITIONS[from].includes(to)
 
 export const canEditGeneral = (status: ProjectStatus) =>
-  status === "borrador" || status === "rechazado"
+  status === "DRAFT" || status === "REJECTED"
 
 export const canEditBacklog = (status: ProjectStatus) =>
-  status === "borrador" || status === "en_evaluacion" || status === "rechazado"
+  status === "DRAFT" || status === "UNDER_REVIEW" || status === "REJECTED"
 
 export const canEditEstimation = (status: ProjectStatus) =>
-  status === "en_evaluacion"
+  status === "UNDER_REVIEW"
 
-export const canEditRisks = (status: ProjectStatus) =>
-  status === "en_evaluacion"
+export const canEditRisks = (status: ProjectStatus) => status === "UNDER_REVIEW"
 
 export const canSaveReport = (status: ProjectStatus) =>
-  status === "en_evaluacion" ||
-  status === "estimado" ||
-  status === "aprobado" ||
-  status === "en_ejecucion"
+  status === "UNDER_REVIEW" ||
+  status === "ESTIMATED" ||
+  status === "APPROVED" ||
+  status === "IN_PROGRESS"
 
 export const canDeleteProject = (status: ProjectStatus) =>
-  status === "borrador" || status === "rechazado"
+  status === "DRAFT" || status === "REJECTED"
 
 export const canPerformProjectAction = (
   status: ProjectStatus,

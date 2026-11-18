@@ -1,11 +1,13 @@
 export {
   PROJECT_STATUSES,
   PROJECT_STATUS_LABELS,
+  PROJECT_STATUS_OPTIONS,
   PROJECT_STATUS_VARIANTS,
+  ProjectStatusEnum,
   isProjectStatus,
-  toProjectStatus,
   type ProjectStatus,
   type ProjectStatusBadgeVariant,
+  type ProjectStatusDefinition,
 } from "@/enumeration/project-status"
 
 export type ProjectAction =

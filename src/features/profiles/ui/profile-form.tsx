@@ -19,16 +19,19 @@ import {
 import { toast } from "@/components/ui/toast"
 import { getErrorMessage, getFieldError } from "@/lib/form-errors"
 import {
-  createProfileRequestSchema,
   profileSchema,
-  updateProfileRequestSchema,
   type ProfileFormValues,
 } from "../schemas/profile-schema"
 import { useCreateProfile, useUpdateProfile } from "../hooks"
 import {
+  CurrencyCode,
+  EXPERIENCE_LEVEL_LABELS,
   EXPERIENCE_LEVEL_OPTIONS,
+  TECHNICAL_ROLE_LABELS,
   TECHNICAL_ROLE_OPTIONS,
+  type ExperienceLevelValue,
   type Profile,
+  type TechnicalRoleValue,
 } from "../types"
 
 type ProfileFormProps = {
@@ -47,24 +50,26 @@ export const ProfileForm = ({
   const updateProfileMutation = useUpdateProfile()
 
   const defaultValues: ProfileFormValues = {
-    name: profile?.name ?? "",
-    role: profile?.role ?? "Frontend",
-    hourlyRate: profile?.hourlyRate ?? 0,
-    currency: profile?.currency ?? "PEN",
-    experienceLevel: profile?.experienceLevel ?? "Mid",
-    email: profile?.email ?? "",
-    isActive: profile?.isActive ?? true,
+    name: profile ? profile.name : "",
+    role: profile ? profile.role : "FRONTEND",
+    hourlyRate: profile ? profile.hourlyRate : 0,
+    currency: profile ? profile.currency : CurrencyCode.PEN,
+    experienceLevel: profile ? profile.experienceLevel : "MID",
+    email: profile ? profile.email : "",
+    isActive: profile ? profile.isActive : true,
   }
 
   const form = useForm({
     defaultValues,
+    validators: {
+      onSubmit: profileSchema,
+    },
     onSubmit: async ({ value }) => {
       try {
         if (isEditing && profile) {
-          const body = updateProfileRequestSchema.parse(value)
           await updateProfileMutation.mutateAsync({
             id: profile.id,
-            ...body,
+            ...value,
           })
           toast.add({
             title: "Perfil actualizado",
@@ -72,8 +77,7 @@ export const ProfileForm = ({
             type: "success",
           })
         } else {
-          const body = createProfileRequestSchema.parse(value)
-          await createProfileMutation.mutateAsync(body)
+          await createProfileMutation.mutateAsync(value)
           toast.add({
             title: "Perfil creado",
             description: `${value.name} se registró correctamente.`,
@@ -100,7 +104,7 @@ export const ProfileForm = ({
       onSubmit={(e) => {
         e.preventDefault()
         e.stopPropagation()
-        form.handleSubmit()
+        void form.handleSubmit()
       }}
       className="space-y-4"
     >
@@ -110,15 +114,7 @@ export const ProfileForm = ({
           <AlertDescription>{submitError.message}</AlertDescription>
         </Alert>
       )}
-      <form.Field
-        name="name"
-        validators={{
-          onChange: ({ value }) => {
-            const res = profileSchema.shape.name.safeParse(value)
-            return res.success ? undefined : res.error.issues[0]?.message
-          },
-        }}
-      >
+      <form.Field name="name">
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor={field.name}>Nombre completo</Label>
@@ -140,30 +136,20 @@ export const ProfileForm = ({
       </form.Field>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <form.Field
-          name="role"
-          validators={{
-            onChange: ({ value }) => {
-              const res = profileSchema.shape.role.safeParse(value)
-              return res.success ? undefined : res.error.issues[0]?.message
-            },
-          }}
-        >
+        <form.Field name="role">
           {(field) => (
             <div className="space-y-1.5">
               <Label htmlFor={field.name}>Rol técnico</Label>
               <Select
                 value={field.state.value}
                 onValueChange={(val) => {
-                  if (val) field.handleChange(val as ProfileFormValues["role"])
+                  if (val) field.handleChange(val as TechnicalRoleValue)
                 }}
                 disabled={isSubmitting}
               >
                 <SelectTrigger id={field.name} className="w-full">
                   <SelectValue placeholder="Selecciona un rol">
-                    {TECHNICAL_ROLE_OPTIONS.find(
-                      (role) => role.value === field.state.value
-                    )?.label ?? "Selecciona un rol"}
+                    {TECHNICAL_ROLE_LABELS[field.state.value]}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -183,33 +169,20 @@ export const ProfileForm = ({
           )}
         </form.Field>
 
-        <form.Field
-          name="experienceLevel"
-          validators={{
-            onChange: ({ value }) => {
-              const res = profileSchema.shape.experienceLevel.safeParse(value)
-              return res.success ? undefined : res.error.issues[0]?.message
-            },
-          }}
-        >
+        <form.Field name="experienceLevel">
           {(field) => (
             <div className="space-y-1.5">
               <Label htmlFor={field.name}>Nivel de seniority</Label>
               <Select
                 value={field.state.value}
                 onValueChange={(val) => {
-                  if (val)
-                    field.handleChange(
-                      val as ProfileFormValues["experienceLevel"]
-                    )
+                  if (val) field.handleChange(val as ExperienceLevelValue)
                 }}
                 disabled={isSubmitting}
               >
                 <SelectTrigger id={field.name} className="w-full">
                   <SelectValue placeholder="Selecciona nivel">
-                    {EXPERIENCE_LEVEL_OPTIONS.find(
-                      (level) => level.value === field.state.value
-                    )?.label ?? "Selecciona nivel"}
+                    {EXPERIENCE_LEVEL_LABELS[field.state.value]}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -231,15 +204,7 @@ export const ProfileForm = ({
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <form.Field
-          name="hourlyRate"
-          validators={{
-            onChange: ({ value }) => {
-              const res = profileSchema.shape.hourlyRate.safeParse(value)
-              return res.success ? undefined : res.error.issues[0]?.message
-            },
-          }}
-        >
+        <form.Field name="hourlyRate">
           {(field) => (
             <div className="space-y-1.5">
               <Label htmlFor={field.name}>Costo estándar / hora (CER)</Label>
@@ -264,22 +229,14 @@ export const ProfileForm = ({
           )}
         </form.Field>
 
-        <form.Field
-          name="currency"
-          validators={{
-            onChange: ({ value }) => {
-              const res = profileSchema.shape.currency.safeParse(value)
-              return res.success ? undefined : res.error.issues[0]?.message
-            },
-          }}
-        >
+        <form.Field name="currency">
           {(field) => (
             <div className="space-y-1.5">
               <Label htmlFor={field.name}>Moneda</Label>
               <Select
-                value="PEN"
+                value={CurrencyCode.PEN}
                 onValueChange={() => {
-                  field.handleChange("PEN")
+                  field.handleChange(CurrencyCode.PEN)
                 }}
                 disabled
               >
@@ -287,7 +244,7 @@ export const ProfileForm = ({
                   <SelectValue placeholder="PEN (S/)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="PEN">PEN (S/)</SelectItem>
+                  <SelectItem value={CurrencyCode.PEN}>PEN (S/)</SelectItem>
                 </SelectContent>
               </Select>
               {getFieldError(field.state.meta.errors) ? (
@@ -300,15 +257,7 @@ export const ProfileForm = ({
         </form.Field>
       </div>
 
-      <form.Field
-        name="email"
-        validators={{
-          onChange: ({ value }) => {
-            const res = profileSchema.shape.email.safeParse(value)
-            return res.success ? undefined : res.error.issues[0]?.message
-          },
-        }}
-      >
+      <form.Field name="email">
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor={field.name}>Correo electrónico</Label>

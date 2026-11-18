@@ -89,7 +89,7 @@ export const RoleSelect = ({
       items={items}
       disabled={disabled}
       onValueChange={(nextValue) => {
-        if (typeof nextValue === "string") {
+        if (nextValue !== null) {
           onValueChange(nextValue)
         }
       }}

@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "@/components/ui/toast"
+import { SPRINT_UNIT_OPTIONS, type SprintUnit } from "@/enumeration"
 import { getErrorMessage } from "@/lib/form-errors"
 import { isSchemaValid } from "@/lib/form-valid"
 import {
@@ -53,7 +54,7 @@ const SprintTeamConfigFields = ({
   const canWrite = access.canEditEstimation
   const [velocity, setVelocity] = useState(initialConfig.velocity)
   const [duration, setDuration] = useState(initialConfig.duration)
-  const [unit, setUnit] = useState<SprintConfig["unit"]>(initialConfig.unit)
+  const [unit, setUnit] = useState<SprintUnit>(initialConfig.unit)
   const canSubmit = isSchemaValid(sprintConfigSchema, {
     velocity,
     duration,
@@ -103,7 +104,7 @@ const SprintTeamConfigFields = ({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="duration">Duración del Sprint</Label>
+        <Label htmlFor="duration">Duración del sprint</Label>
         <div className="flex gap-2">
           <NumberInput
             id="duration"
@@ -113,35 +114,46 @@ const SprintTeamConfigFields = ({
             step={1}
             disabled={!canWrite}
             invalid={false}
-            className="w-40"
+            className="w-36"
             onBlur={() => undefined}
             onChange={setDuration}
           />
           <Select
             value={unit}
             disabled={!canWrite}
-            onValueChange={(value) =>
-              setUnit((value as SprintConfig["unit"]) ?? "dias")
-            }
+            onValueChange={(value) => {
+              if (value) {
+                setUnit(value as SprintUnit)
+              }
+            }}
           >
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-36">
               <SelectValue placeholder="Unidad" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="dias">días</SelectItem>
-              <SelectItem value="semanas">semanas</SelectItem>
+              {SPRINT_UNIT_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label === "días"
+                    ? "Días"
+                    : option.label === "semanas"
+                      ? "Semanas"
+                      : option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <Button
-        type="submit"
-        disabled={!canWrite || !canSubmit || saveConfig.isPending}
-      >
-        <SaveIcon data-icon="inline-start" />
-        {saveConfig.isPending ? "Guardando..." : "Guardar Configuración"}
-      </Button>
+      <div className="pt-2">
+        <Button
+          type="submit"
+          disabled={!canWrite || !canSubmit || saveConfig.isPending}
+        >
+          <SaveIcon data-icon="inline-start" className="size-4" />
+          {saveConfig.isPending ? "Guardando..." : "Guardar configuración"}
+        </Button>
+      </div>
     </form>
   )
 }

@@ -1,8 +1,7 @@
-export interface ToggleProfileStatusRequest {
+export type ToggleProfileStatusRequest = {
   isActive: boolean
 }
 
-export interface ToggleProfileStatusPayload {
+export type ToggleProfileStatusPayload = ToggleProfileStatusRequest & {
   id: string
-  isActive: boolean
 }

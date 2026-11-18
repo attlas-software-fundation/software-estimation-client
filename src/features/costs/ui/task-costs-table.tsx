@@ -40,27 +40,31 @@ export const TaskCostsTable = ({ taskCosts }: TaskCostsTableProps) => {
           />
         ) : (
           <Table aria-label="Costos por tarea y contribución de cada perfil">
-            <TableHeader>
-              <TableRow>
-                <TableHead scope="col">Tarea (ID)</TableHead>
-                <TableHead scope="col">Perfil técnico (ID)</TableHead>
-                <TableHead scope="col" className="text-right">
+            <TableHeader className="bg-slate-100 [&_tr]:border-b-2 [&_tr]:border-slate-300 [&_tr]:hover:bg-transparent">
+              <TableRow className="hover:bg-transparent">
+                <TableHead scope="col" className="text-slate-700">
+                  Tarea
+                </TableHead>
+                <TableHead scope="col" className="text-slate-700">
+                  Perfil técnico
+                </TableHead>
+                <TableHead scope="col" className="text-right text-slate-700">
                   Horas
                 </TableHead>
-                <TableHead scope="col" className="text-right">
+                <TableHead scope="col" className="text-right text-slate-700">
                   CER por hora
                 </TableHead>
-                <TableHead scope="col" className="text-right">
+                <TableHead scope="col" className="text-right text-slate-700">
                   Costo por contribución
                 </TableHead>
-                <TableHead scope="col" className="text-right">
+                <TableHead scope="col" className="text-right text-slate-700">
                   Total de la tarea
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {taskCosts.map((task) => (
-                <TaskCostRows key={task.taskId} task={task} />
+              {taskCosts.map((task, index) => (
+                <TaskCostRows key={task.taskId} task={task} taskIndex={index} />
               ))}
             </TableBody>
           </Table>

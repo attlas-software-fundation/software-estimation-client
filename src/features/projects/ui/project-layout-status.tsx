@@ -4,8 +4,8 @@ import { useParams } from "next/navigation"
 import { ProjectStatusBanner } from "./project-status-banner"
 
 export const ProjectLayoutStatus = () => {
-  const params = useParams()
-  const projectId = typeof params.projectId === "string" ? params.projectId : ""
+  const params = useParams<{ projectId?: string }>()
+  const projectId = params.projectId
 
   if (!projectId) {
     return null

@@ -37,7 +37,7 @@ export const ProjectHistoryDialog = ({
               <DialogDescription>
                 Registro cronológico de transiciones para{" "}
                 <span className="text-foreground font-semibold">
-                  {project.name || project.nombre}
+                  {project.name}
                 </span>
               </DialogDescription>
             </div>
