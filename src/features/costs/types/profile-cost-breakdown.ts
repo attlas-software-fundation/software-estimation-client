@@ -1,11 +1,4 @@
-import type { CostAssignment } from "./cost-assignment"
-
-export type ProfileCostAssignment = CostAssignment & {
-  profileId: string
-  profileName: string
-  profileRole: string
-  profileEmail: string
-}
+import type { CurrencyCode } from "@/enumeration/currency-code"
 
 export type ProfileCostBreakdown = {
   profileId: string
@@ -13,6 +6,7 @@ export type ProfileCostBreakdown = {
   profileRole: string
   profileEmail: string
   totalHours: number
-  cer: number
+  cer: number | null
   totalCost: number
+  currency?: CurrencyCode | null
 }

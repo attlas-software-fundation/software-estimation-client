@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { formatCurrency } from "@/lib/format"
+import { formatCostAmount } from "../utils/format-cost-amount"
 import { TableEmptyState } from "@/components/table-empty-state"
 import type { ProfileCostBreakdown } from "../types/profile-cost-breakdown"
 import { CostProfileIdentity } from "./cost-profile-identity"
@@ -31,7 +31,7 @@ export const ProfileCostBreakdownTable = ({
       <CardHeader>
         <CardTitle>Desglose por perfil técnico</CardTitle>
         <CardDescription>
-          Horas × CER horario. El CER sale del perfil técnico.
+          Subtotales consolidados por perfil y horas de sus contribuciones.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -41,18 +41,33 @@ export const ProfileCostBreakdownTable = ({
             icon={UserIcon}
           />
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Perfil técnico</TableHead>
-                <TableHead className="text-right">Horas totales</TableHead>
-                <TableHead className="text-right">CER</TableHead>
-                <TableHead className="text-right">Costo total</TableHead>
+          <Table aria-label="Desglose de costos por perfil técnico">
+            <TableHeader className="bg-slate-100 [&_tr]:border-b-2 [&_tr]:border-slate-300 [&_tr]:hover:bg-transparent">
+              <TableRow className="hover:bg-transparent">
+                <TableHead scope="col" className="text-slate-700">
+                  Perfil técnico
+                </TableHead>
+                <TableHead scope="col" className="text-right text-slate-700">
+                  Horas totales
+                </TableHead>
+                <TableHead scope="col" className="text-right text-slate-700">
+                  CER por hora
+                </TableHead>
+                <TableHead scope="col" className="text-right text-slate-700">
+                  Costo total
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {profileBreakdown.map((profile) => (
-                <TableRow key={profile.profileId}>
+              {profileBreakdown.map((profile, index) => (
+                <TableRow
+                  key={profile.profileId}
+                  className={
+                    index === 0
+                      ? "border-b border-slate-200"
+                      : "border-t-2 border-b border-t-slate-300 border-b-slate-200"
+                  }
+                >
                   <TableCell>
                     <CostProfileIdentity
                       name={profile.profileName}
@@ -60,14 +75,16 @@ export const ProfileCostBreakdownTable = ({
                       email={profile.profileEmail}
                     />
                   </TableCell>
-                  <TableCell className="text-right">
-                    {profile.totalHours}
+                  <TableCell className="text-right tabular-nums">
+                    {profile.totalHours} h
                   </TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrency(profile.cer)}
+                  <TableCell className="text-right tabular-nums">
+                    {profile.cer === null
+                      ? "Variable por contribución"
+                      : `${formatCostAmount(profile.cer, profile.currency)} / h`}
                   </TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrency(profile.totalCost)}
+                  <TableCell className="text-right font-semibold tabular-nums">
+                    {formatCostAmount(profile.totalCost, profile.currency)}
                   </TableCell>
                 </TableRow>
               ))}

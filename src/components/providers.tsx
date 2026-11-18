@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { Toaster } from "@/components/ui/toast"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { purgeMockSeedData } from "@/lib/cleanup-mock-data"
 
 const RouteScrollReset = () => {
   const pathname = usePathname()
@@ -19,10 +18,6 @@ const RouteScrollReset = () => {
 }
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
-  useEffect(() => {
-    purgeMockSeedData()
-  }, [])
-
   const [queryClient] = useState(
     () =>
       new QueryClient({

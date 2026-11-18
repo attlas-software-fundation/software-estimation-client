@@ -1,66 +1,50 @@
 "use client"
 
-import { useEffect } from "react"
-import { createPortal } from "react-dom"
-import { TrashIcon, XIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { AlertTriangleIcon, CheckIcon, TrashIcon } from "lucide-react"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 import { toast } from "@/components/ui/toast"
 import { getErrorMessage } from "@/lib/form-errors"
-import { useProjects } from "../hooks/use-projects"
+import { useDeleteProject } from "../hooks/use-delete-project"
+import { canDeleteProject } from "../utils/project-permissions"
+import { PROJECT_STATUS_LABELS } from "../types/project-status"
+import type { Project } from "../types"
 
 type ProjectDeleteDialogProps = {
-  projectId: string | null
-  projectName: string
+  project: Project | null
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
 }
 
+const ASSOCIATED_DATA_WARNINGS = [
+  "Backlog de historias y tareas",
+  "Horas estimadas por tarea",
+  "Story points asignados",
+  "Configuración de sprints",
+  "Configuración de riesgos",
+  "Historial de estimaciones y reportes",
+]
+
 export const ProjectDeleteDialog = ({
-  projectId,
-  projectName,
+  project,
   isOpen,
   onClose,
   onSuccess,
 }: ProjectDeleteDialogProps) => {
-  const { deleteProject, isDeleting } = useProjects()
+  const deleteProject = useDeleteProject()
 
-  useEffect(() => {
-    if (!isOpen) {
-      return
-    }
-
-    document.body.style.overflow = "hidden"
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !isDeleting) {
-        onClose()
-      }
-    }
-
-    document.addEventListener("keydown", onKeyDown)
-
-    return () => {
-      document.body.style.removeProperty("overflow")
-      document.removeEventListener("keydown", onKeyDown)
-    }
-  }, [isDeleting, isOpen, onClose])
+  const status = project ? project.status : "DRAFT"
+  const canDelete = canDeleteProject(status)
+  const statusLabel = PROJECT_STATUS_LABELS[status]
 
   const handleConfirm = async () => {
-    if (!projectId) return
+    if (!project) return
 
     try {
-      await deleteProject(projectId)
+      await deleteProject.mutateAsync(project.id)
       toast.add({
         title: "Proyecto eliminado",
-        description: `${projectName} se eliminó correctamente.`,
+        description: `"${project.name}" se eliminó correctamente.`,
         type: "success",
       })
       onClose()
@@ -74,56 +58,76 @@ export const ProjectDeleteDialog = ({
     }
   }
 
-  if (!isOpen || !projectId) {
-    return null
+  if (project && !canDelete) {
+    return (
+      <ConfirmDialog
+        open={isOpen && Boolean(project)}
+        onOpenChange={(open) => {
+          if (!open) onClose()
+        }}
+        title="No se puede eliminar"
+        icon={<AlertTriangleIcon className="size-6" />}
+        tone="warning"
+        confirmText="Entendido"
+        confirmIcon={<CheckIcon />}
+        confirmVariant="default"
+        onConfirm={onClose}
+        description={
+          <span>
+            El proyecto{" "}
+            <span className="text-foreground font-semibold">
+              {project.name}
+            </span>{" "}
+            está en estado <span className="font-semibold">{statusLabel}</span>.
+            Solo se pueden eliminar proyectos en estado{" "}
+            <span className="font-semibold">Borrador</span> o{" "}
+            <span className="font-semibold">Rechazado</span>.
+          </span>
+        }
+      />
+    )
   }
 
-  const canInteract = !isDeleting
-
-  return createPortal(
-    <div className="fixed inset-0 z-200 flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/40"
-        onClick={() => {
-          if (canInteract) {
-            onClose()
-          }
-        }}
-      />
-      <Card className="relative z-10 w-full max-w-sm shadow-lg">
-        <CardHeader className="justify-items-center text-center">
-          <div className="bg-destructive/10 text-destructive mx-auto flex size-14 items-center justify-center rounded-full">
-            <TrashIcon className="size-7" />
-          </div>
-          <CardTitle>Eliminar proyecto</CardTitle>
-          <CardDescription>
+  return (
+    <ConfirmDialog
+      open={isOpen && Boolean(project)}
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+      title="Eliminar proyecto"
+      icon={<TrashIcon className="size-6" />}
+      tone="destructive"
+      confirmText="Eliminar proyecto"
+      confirmLoadingText="Eliminando..."
+      confirmIcon={<TrashIcon />}
+      confirmVariant="destructive"
+      isLoading={deleteProject.isPending}
+      onConfirm={handleConfirm}
+      description={
+        <div className="flex flex-col gap-3">
+          <p>
             ¿Seguro que quieres eliminar el proyecto{" "}
-            <span className="text-foreground font-semibold">{projectName}</span>
-            ? Esta acción no se puede deshacer.
-          </CardDescription>
-        </CardHeader>
-        <CardFooter className="justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!canInteract}
-            onClick={onClose}
-          >
-            <XIcon />
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            disabled={!canInteract}
-            onClick={handleConfirm}
-          >
-            <TrashIcon />
-            {isDeleting ? "Eliminando..." : "Eliminar proyecto"}
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>,
-    document.body
+            <span className="text-foreground font-semibold">
+              {project?.name}
+            </span>
+            ? Esta acción{" "}
+            <span className="font-semibold">no se puede deshacer</span>.
+          </p>
+          <div className="bg-destructive/10 rounded-md p-3">
+            <p className="text-destructive mb-2 text-sm font-medium">
+              También se eliminará la información asociada:
+            </p>
+            <ul className="text-muted-foreground space-y-0.5 text-sm">
+              {ASSOCIATED_DATA_WARNINGS.map((item) => (
+                <li key={item} className="flex items-center gap-1.5">
+                  <span className="text-destructive">·</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      }
+    />
   )
 }

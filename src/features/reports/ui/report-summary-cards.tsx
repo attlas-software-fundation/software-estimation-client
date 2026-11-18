@@ -1,11 +1,17 @@
 "use client"
 
-import { CalculatorIcon, Clock3Icon, BanknoteIcon } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { formatCurrency } from "@/lib/format"
+import { BanknoteIcon, CalculatorIcon, Clock3Icon } from "lucide-react"
+import {
+  Card,
+  CardAction,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { timeUnitLabel } from "@/lib/calendar-time"
+import { formatCurrency } from "@/lib/format"
 import type { ReportSnapshot } from "../types"
-import { riskLevelLabel } from "../utils/report-labels"
 
 type ReportSummaryCardsProps = {
   snapshot: ReportSnapshot
@@ -16,61 +22,57 @@ export const ReportSummaryCards = ({ snapshot }: ReportSummaryCardsProps) => {
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-      {/* Esfuerzo - Teal (Verde medio celeste) sólido */}
-      <Card className="border-0 bg-teal-600 text-white shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-teal-100">
-            Esfuerzo
-          </CardTitle>
-          <CalculatorIcon className="size-5 text-white/90" />
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold tracking-tight text-white">
+      <Card>
+        <CardHeader>
+          <CardDescription>Esfuerzo</CardDescription>
+          <CardTitle className="text-2xl font-semibold tabular-nums">
             {snapshot.baseEffortPoints} SP
-          </p>
-          <p className="mt-1 text-xs text-teal-100/80">
-            {snapshot.storiesWithPoints} de {snapshot.storiesTotal} historias ·{" "}
+          </CardTitle>
+          <CardAction>
+            <CalculatorIcon className="text-muted-foreground size-4" />
+          </CardAction>
+        </CardHeader>
+        <CardFooter>
+          <p className="text-muted-foreground text-sm">
+            {snapshot.storiesWithPoints}/{snapshot.storiesTotal} historias ·{" "}
             {snapshot.totalSprints} sprints
           </p>
-        </CardContent>
+        </CardFooter>
       </Card>
 
-      {/* Tiempo - Borgoña / Vino sólido */}
-      <Card className="border-0 bg-rose-700 text-white shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-rose-100">
-            Tiempo
-          </CardTitle>
-          <Clock3Icon className="size-5 text-white/90" />
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold tracking-tight text-white">
+      <Card>
+        <CardHeader>
+          <CardDescription>Tiempo</CardDescription>
+          <CardTitle className="text-2xl font-semibold tabular-nums">
             {snapshot.totalTime} {unit}
+          </CardTitle>
+          <CardAction>
+            <Clock3Icon className="text-muted-foreground size-4" />
+          </CardAction>
+        </CardHeader>
+        <CardFooter>
+          <p className="text-muted-foreground text-sm">
+            Base {snapshot.baseTime} {unit} + {snapshot.contingencyTime}
           </p>
-          <p className="mt-1 text-xs text-rose-100/80">
-            Base {snapshot.baseTime} {unit} + {snapshot.contingencyTime} por
-            riesgo {riskLevelLabel(snapshot.riskLevel)}
-          </p>
-        </CardContent>
+        </CardFooter>
       </Card>
 
-      {/* Costo - Carbón grafito / Pizarra sólido */}
-      <Card className="border-0 bg-slate-800 text-white shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-slate-200">
-            Costo
-          </CardTitle>
-          <BanknoteIcon className="size-5 text-white/90" />
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold tracking-tight text-white">
+      <Card>
+        <CardHeader>
+          <CardDescription>Costo</CardDescription>
+          <CardTitle className="text-2xl font-semibold tabular-nums">
             {formatCurrency(snapshot.totalCost)}
-          </p>
-          <p className="mt-1 text-xs text-slate-300">
-            Base {formatCurrency(snapshot.baseCost)} · margen{" "}
+          </CardTitle>
+          <CardAction>
+            <BanknoteIcon className="text-muted-foreground size-4" />
+          </CardAction>
+        </CardHeader>
+        <CardFooter>
+          <p className="text-muted-foreground text-sm">
+            Base {formatCurrency(snapshot.baseCost)} ·{" "}
             {snapshot.contingencyMarginPercentage}%
           </p>
-        </CardContent>
+        </CardFooter>
       </Card>
     </div>
   )

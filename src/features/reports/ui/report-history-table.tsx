@@ -10,82 +10,75 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import { formatCurrency, formatDate } from "@/lib/format"
 import { timeUnitLabel } from "@/lib/calendar-time"
 import { TableEmptyState } from "@/components/table-empty-state"
-import type { ReportSnapshot } from "../types"
-import { riskLevelLabel, riskLevelVariant } from "../utils/report-labels"
+import type { ProjectEstimationResponse } from "../types"
 
 type ReportHistoryTableProps = {
-  snapshots: ReportSnapshot[]
+  estimations: ProjectEstimationResponse[]
   emptyLabel: string
   exportingId: string
-  onExport: (snapshot: ReportSnapshot) => void
+  onExport: (estimation: ProjectEstimationResponse) => void
 }
 
 export const ReportHistoryTable = ({
-  snapshots,
+  estimations,
   emptyLabel,
   exportingId,
   onExport,
 }: ReportHistoryTableProps) => {
-  if (snapshots.length === 0) {
+  if (estimations.length === 0) {
     return <TableEmptyState message={emptyLabel} icon={HistoryIcon} />
   }
 
   return (
     <Table>
-      <TableHeader>
-        <TableRow>
+      <TableHeader className="bg-slate-100 [&_th]:border-b-2 [&_th]:border-slate-300 [&_tr]:border-b-2 [&_tr]:border-slate-300">
+        <TableRow className="hover:bg-transparent">
           <TableHead>Fecha</TableHead>
-          <TableHead>Riesgo</TableHead>
           <TableHead>Puntos</TableHead>
+          <TableHead>Esfuerzo</TableHead>
           <TableHead>Tiempo total</TableHead>
           <TableHead>Costo total</TableHead>
-          <TableHead className="w-20 text-right">PDF</TableHead>
+          <TableHead className="w-28 text-right">Acciones</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {snapshots.map((snapshot) => {
-          const rowId =
-            snapshot.id.length > 0 ? snapshot.id : snapshot.createdAt
-
-          return (
-            <TableRow key={rowId}>
-              <TableCell className="font-medium">
-                {snapshot.createdAt.length > 0
-                  ? formatDate(snapshot.createdAt)
-                  : "—"}
-              </TableCell>
-              <TableCell>
-                <Badge variant={riskLevelVariant(snapshot.riskLevel)}>
-                  {riskLevelLabel(snapshot.riskLevel)} (
-                  {snapshot.contingencyMarginPercentage}%)
-                </Badge>
-              </TableCell>
-              <TableCell>{snapshot.baseEffortPoints}</TableCell>
-              <TableCell>
-                {snapshot.totalTime} {timeUnitLabel(snapshot.timeUnit)}
-              </TableCell>
-              <TableCell>{formatCurrency(snapshot.totalCost)}</TableCell>
-              <TableCell className="text-right">
+        {estimations.map((estimation) => (
+          <TableRow
+            key={estimation.id}
+            className="border-0 [&_td]:border-b [&_td]:border-slate-300"
+          >
+            <TableCell className="font-medium">
+              {estimation.createdAt.length > 0
+                ? formatDate(estimation.createdAt)
+                : "—"}
+            </TableCell>
+            <TableCell>{estimation.baseEffortPoints} SP</TableCell>
+            <TableCell>{estimation.totalEffortHours} h</TableCell>
+            <TableCell>
+              {estimation.totalTime} {timeUnitLabel(estimation.timeUnit)}
+            </TableCell>
+            <TableCell>{formatCurrency(estimation.totalCost)}</TableCell>
+            <TableCell className="text-right">
+              <div className="flex items-center justify-end gap-1">
                 <Button
                   type="button"
                   variant="outline"
                   size="icon-sm"
                   disabled={exportingId.length > 0}
-                  onClick={() => onExport(snapshot)}
+                  onClick={() => onExport(estimation)}
                 >
                   <FileDownIcon />
                   <span className="sr-only">
                     Descargar PDF de esta estimación
                   </span>
                 </Button>
-              </TableCell>
-            </TableRow>
-          )
-        })}
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
       </TableBody>
     </Table>
   )

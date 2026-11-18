@@ -1,30 +1,26 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
+import { useMemo, useState } from "react"
 import { FolderKanbanIcon, PlusIcon } from "lucide-react"
-
 import { DataTable } from "@/components/data-table"
-import { buttonVariants } from "@/components/ui/button"
-
-import { usePagination } from "@/hooks"
+import { Button } from "@/components/ui/button"
+import { useDebounce, usePagination } from "@/hooks"
 import { TABLE_PAGE_SIZE } from "@/lib/pagination"
-
+import { useUsers } from "@/features/users/hooks/use-users"
+import { getFullName } from "@/features/auth/types"
 import {
   FilterOperator,
   type FilterRequest,
-  type PaginatedResponse,
   type QueryRequest,
 } from "@/types/api"
-
-import { useProjects } from "../hooks/use-projects"
-import type { Project, ProjectFilters } from "../types/project-types"
-
+import { useProjects } from "@/features/projects"
+import type { Project, ProjectFilters, ProjectSearchResponse } from "../types"
 import { ProjectsTable } from "./projects-table"
+import { ProjectDialog } from "./project-dialog"
 import { ProjectToolbar } from "./project-toolbar"
-import { ProjectsFiltersDrawer } from "./projects-filters-drawer"
+import { ProjectsFiltersDrawer } from "@/features/projects"
 
-const emptyPage: PaginatedResponse<Project, "projectResponse"> = {
+const emptyPage: ProjectSearchResponse = {
   projectResponse: [],
   pageSize: TABLE_PAGE_SIZE,
   pageNumber: 0,
@@ -38,60 +34,109 @@ export const ProjectsView = () => {
   const { pageNumber, pageSize, setPageNumber, resetPage } = usePagination()
 
   const [search, setSearch] = useState("")
+  const debouncedSearch = useDebounce(search, 500)
 
   const [filters, setFilters] = useState<ProjectFilters>({
-    nombre: "",
-    tipo: "",
-    responsable: "",
-    estado: "",
-    fecha_inicio: "",
-    fecha_fin: "",
+    name: "",
+    type: "",
+    responsibleId: "",
+    status: "",
+    startDate: "",
+    plannedDate: "",
   })
 
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingProject, setEditingProject] = useState<Project | null>(null)
+
+  const { data: usersData } = useUsers({
+    filters: [],
+    pagination: {
+      orderBy: "createdAt",
+      pageSize: TABLE_PAGE_SIZE,
+      pageNumber: 0,
+      sortDirection: "ASC",
+    },
+  })
+
+  const usersMap = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const user of usersData?.userResponse || []) {
+      map.set(user.id, getFullName(user))
+    }
+    return map
+  }, [usersData])
 
   const activeFilters =
     (search.length > 0 ? 1 : 0) +
-    (filters.nombre.length > 0 ? 1 : 0) +
-    (filters.tipo.length > 0 ? 1 : 0) +
-    (filters.responsable.length > 0 ? 1 : 0) +
-    (filters.estado.length > 0 ? 1 : 0) +
-    (filters.fecha_inicio.length > 0 ? 1 : 0) +
-    (filters.fecha_fin.length > 0 ? 1 : 0)
+    (filters.name.length > 0 ? 1 : 0) +
+    (filters.type.length > 0 ? 1 : 0) +
+    (filters.responsibleId.length > 0 ? 1 : 0) +
+    (filters.status.length > 0 ? 1 : 0) +
+    (filters.startDate.length > 0 ? 1 : 0) +
+    (filters.plannedDate.length > 0 ? 1 : 0)
 
   const apiFilters: FilterRequest[] = []
 
-  if (search.trim()) {
+  if (debouncedSearch.trim().length > 0) {
     apiFilters.push({
       key: "search",
       operator: FilterOperator.LK,
-      values: [search.trim()],
+      values: [debouncedSearch.trim()],
     })
   }
 
-  for (const key of ["nombre", "tipo", "responsable", "estado"] as const) {
-    if (filters[key]) {
-      apiFilters.push({
-        key,
-        operator: key === "nombre" ? FilterOperator.LK : FilterOperator.EQ,
-        values: [filters[key]],
-      })
-    }
+  if (filters.name.trim().length > 0) {
+    apiFilters.push({
+      key: "name",
+      operator: FilterOperator.LK,
+      values: [filters.name.trim()],
+    })
   }
 
-  if (filters.fecha_inicio) {
+  if (filters.type) {
     apiFilters.push({
-      key: "fecha_inicio",
+      key: "type",
+      operator: FilterOperator.EQ,
+      values: [filters.type],
+    })
+  }
+
+  if (filters.responsibleId) {
+    apiFilters.push({
+      key: "responsibleId",
+      operator: FilterOperator.EQ,
+      values: [filters.responsibleId],
+    })
+  }
+
+  if (filters.status) {
+    apiFilters.push({
+      key: "status",
+      operator: FilterOperator.EQ,
+      values: [filters.status],
+    })
+  }
+
+  if (filters.startDate) {
+    const dateValue = filters.startDate.includes("T")
+      ? filters.startDate.split("T")[0]
+      : filters.startDate
+    apiFilters.push({
+      key: "startDate",
       operator: FilterOperator.GE,
-      values: [filters.fecha_inicio],
+      values: [dateValue],
     })
   }
 
-  if (filters.fecha_fin) {
+  if (filters.plannedDate) {
+    const dateValue = filters.plannedDate.includes("T")
+      ? filters.plannedDate.split("T")[0]
+      : filters.plannedDate
     apiFilters.push({
-      key: "fecha_fin",
+      key: "plannedDate",
       operator: FilterOperator.LE,
-      values: [filters.fecha_fin],
+      values: [dateValue],
     })
   }
 
@@ -105,9 +150,18 @@ export const ProjectsView = () => {
     },
   }
 
-  const { paginatedProjects, isLoading } = useProjects(query)
+  const { data, isLoading, isError } = useProjects(query)
+  const pagination = data || emptyPage
 
-  const pagination = paginatedProjects ?? emptyPage
+  const handleOpenCreate = () => {
+    setEditingProject(null)
+    setDialogOpen(true)
+  }
+
+  const handleEdit = (project: Project) => {
+    setEditingProject(project)
+    setDialogOpen(true)
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -116,6 +170,11 @@ export const ProjectsView = () => {
           search={search}
           activeFilters={activeFilters}
           filters={filters}
+          responsibleLabel={
+            filters.responsibleId
+              ? usersMap.get(filters.responsibleId)
+              : undefined
+          }
           onSearchChange={(value) => {
             setSearch(value)
             resetPage()
@@ -126,19 +185,20 @@ export const ProjectsView = () => {
             resetPage()
           }}
           actions={
-            <Link
-              href="/projects/new"
-              className={buttonVariants({ className: "shrink-0" })}
+            <Button
+              type="button"
+              onClick={handleOpenCreate}
+              className="shrink-0"
             >
               <PlusIcon />
               Nuevo proyecto
-            </Link>
+            </Button>
           }
         />
 
         <DataTable
           isLoading={isLoading}
-          isError={false}
+          isError={isError}
           errorMessage="No se pudieron cargar los proyectos."
           isEmpty={pagination.projectResponse.length === 0}
           emptyIcon={FolderKanbanIcon}
@@ -150,7 +210,11 @@ export const ProjectsView = () => {
           pagination={pagination}
           onPageChange={setPageNumber}
         >
-          <ProjectsTable projects={pagination.projectResponse} />
+          <ProjectsTable
+            projects={pagination.projectResponse}
+            usersMap={usersMap}
+            onEdit={handleEdit}
+          />
         </DataTable>
       </div>
 
@@ -162,6 +226,17 @@ export const ProjectsView = () => {
           setFilters(nextFilters)
           resetPage()
         }}
+      />
+
+      <ProjectDialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open)
+          if (!open) {
+            setEditingProject(null)
+          }
+        }}
+        project={editingProject}
       />
     </div>
   )

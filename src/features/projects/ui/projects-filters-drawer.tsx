@@ -4,20 +4,8 @@ import { useForm } from "@tanstack/react-form"
 import {
   CheckIcon,
   RotateCcwIcon,
-  Cpu,
-  Bot,
-  Activity,
-  Sliders,
-  TrendingUp,
-  Layers,
   UserRound,
-  FileText,
-  Eye,
-  Calculator,
-  CheckCircle,
-  XCircle,
-  PlayCircle,
-  Flag,
+  type LucideIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DateRangeFields } from "@/components/ui/date-range-fields"
@@ -43,104 +31,25 @@ import {
   ALL_PROJECT_FILTER_VALUE,
   projectFiltersSchema,
 } from "../schemas/project-filters-schema"
-import type { ProjectFilters } from "../types/project-types"
+import {
+  PROJECT_STATUS_OPTIONS,
+  PROJECT_TYPE_OPTIONS,
+  type ProjectFilters,
+} from "../types"
 import { useUsers } from "@/features/users/hooks/use-users"
 import { getFullName } from "@/features/auth/types"
+import { TABLE_PAGE_SIZE } from "@/lib/pagination"
 import { getFieldError } from "@/lib/form-errors"
 import { cn } from "@/lib/utils"
 
 const emptyFilters: ProjectFilters = {
-  nombre: "",
-  tipo: "",
-  responsable: "",
-  estado: "",
-  fecha_inicio: "",
-  fecha_fin: "",
+  name: "",
+  type: "",
+  responsibleId: "",
+  status: "",
+  startDate: "",
+  plannedDate: "",
 }
-
-const projectTypes = [
-  {
-    value: "monitoreo",
-    label: "Monitoreo IoT",
-    icon: Cpu,
-    color: "text-blue-500",
-  },
-  {
-    value: "automatizacion",
-    label: "Automatización IoT",
-    icon: Bot,
-    color: "text-emerald-500",
-  },
-  {
-    value: "telemetria",
-    label: "Telemetría IoT",
-    icon: Activity,
-    color: "text-amber-500",
-  },
-  {
-    value: "control_supervision",
-    label: "Control y supervisión IoT",
-    icon: Sliders,
-    color: "text-purple-500",
-  },
-  {
-    value: "mantenimiento_predictivo",
-    label: "Mantenimiento predictivo IoT",
-    icon: TrendingUp,
-    color: "text-rose-500",
-  },
-  {
-    value: "integracion",
-    label: "Integración IoT",
-    icon: Layers,
-    color: "text-cyan-500",
-  },
-]
-
-const projectStatuses = [
-  {
-    value: "borrador",
-    label: "Borrador",
-    icon: FileText,
-    color: "text-muted-foreground",
-  },
-  {
-    value: "en_evaluacion",
-    label: "En evaluación",
-    icon: Eye,
-    color: "text-amber-500",
-  },
-  {
-    value: "estimado",
-    label: "Estimado",
-    icon: Calculator,
-    color: "text-blue-500",
-  },
-  {
-    value: "aprobado",
-    label: "Aprobado",
-    icon: CheckCircle,
-    color: "text-emerald-500",
-  },
-  {
-    value: "rechazado",
-    label: "Rechazado",
-    icon: XCircle,
-    color: "text-red-500",
-  },
-  {
-    value: "en_ejecucion",
-    label: "En ejecución",
-    icon: PlayCircle,
-    color: "text-cyan-500",
-  },
-  {
-    value: "finalizado",
-    label: "Finalizado",
-    icon: Flag,
-    color: "text-purple-500",
-  },
-]
 
 type ProjectsFiltersDrawerProps = {
   open: boolean
@@ -158,7 +67,7 @@ const ProjectsFiltersForm = ({
     filters: [],
     pagination: {
       orderBy: "createdAt",
-      pageSize: 1000,
+      pageSize: TABLE_PAGE_SIZE,
       pageNumber: 0,
       sortDirection: "ASC",
     },
@@ -167,42 +76,38 @@ const ProjectsFiltersForm = ({
   const form = useForm({
     defaultValues: {
       ...filters,
-      tipo: filters.tipo || ALL_PROJECT_FILTER_VALUE,
-      responsable: filters.responsable || ALL_PROJECT_FILTER_VALUE,
-      estado: filters.estado || ALL_PROJECT_FILTER_VALUE,
-      fecha_inicio: filters.fecha_inicio
-        ? new Date(filters.fecha_inicio)
-        : (undefined as Date | undefined),
-      fecha_fin: filters.fecha_fin
-        ? new Date(filters.fecha_fin)
-        : (undefined as Date | undefined),
+      type: filters.type || ALL_PROJECT_FILTER_VALUE,
+      responsibleId: filters.responsibleId || ALL_PROJECT_FILTER_VALUE,
+      status: filters.status || ALL_PROJECT_FILTER_VALUE,
+      startDate: filters.startDate ? new Date(filters.startDate) : undefined,
+      plannedDate: filters.plannedDate
+        ? new Date(filters.plannedDate)
+        : undefined,
     },
     validators: { onSubmit: projectFiltersSchema },
     onSubmit: ({ value }) => {
       onApply({
-        nombre: value.nombre.trim(),
-        tipo: value.tipo === ALL_PROJECT_FILTER_VALUE ? "" : value.tipo,
-        responsable:
-          value.responsable === ALL_PROJECT_FILTER_VALUE
+        name: value.name.trim(),
+        type: value.type === ALL_PROJECT_FILTER_VALUE ? "" : value.type,
+        responsibleId:
+          value.responsibleId === ALL_PROJECT_FILTER_VALUE
             ? ""
-            : value.responsable,
-        estado: value.estado === ALL_PROJECT_FILTER_VALUE ? "" : value.estado,
-        fecha_inicio: value.fecha_inicio
-          ? value.fecha_inicio.toISOString()
-          : "",
-        fecha_fin: value.fecha_fin ? value.fecha_fin.toISOString() : "",
+            : value.responsibleId,
+        status: value.status === ALL_PROJECT_FILTER_VALUE ? "" : value.status,
+        startDate: value.startDate ? value.startDate.toISOString() : "",
+        plannedDate: value.plannedDate ? value.plannedDate.toISOString() : "",
       })
       onOpenChange(false)
     },
   })
 
   const renderSelect = (
-    name: "tipo" | "responsable" | "estado",
+    name: "type" | "responsibleId" | "status",
     label: string,
     options: {
       value: string
       label: string
-      icon?: React.ElementType
+      icon?: LucideIcon
       color?: string
     }[]
   ) => {
@@ -227,7 +132,7 @@ const ProjectsFiltersForm = ({
                 >
                   <SelectValue>
                     <span className="flex items-center gap-2">
-                      {isAllSelected && name === "responsable" && (
+                      {isAllSelected && name === "responsibleId" && (
                         <UserRound className="text-muted-foreground h-4 w-4" />
                       )}
                       {selectedOption?.icon ? (
@@ -245,7 +150,7 @@ const ProjectsFiltersForm = ({
                 <SelectContent>
                   <SelectItem value={ALL_PROJECT_FILTER_VALUE}>
                     <span className="flex items-center gap-2">
-                      {name === "responsable" && (
+                      {name === "responsibleId" && (
                         <UserRound className="text-muted-foreground h-4 w-4" />
                       )}
                       <span>Todos</span>
@@ -292,7 +197,7 @@ const ProjectsFiltersForm = ({
       </DrawerHeader>
 
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-        <form.Field name="nombre">
+        <form.Field name="name">
           {(field) => (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="projects-filter-name">Nombre</Label>
@@ -306,28 +211,28 @@ const ProjectsFiltersForm = ({
             </div>
           )}
         </form.Field>
-        {renderSelect("tipo", "Tipo", projectTypes)}
+        {renderSelect("type", "Tipo", PROJECT_TYPE_OPTIONS)}
         {renderSelect(
-          "responsable",
+          "responsibleId",
           "Responsable",
-          (usersData?.userResponse ?? []).map((user) => {
+          (usersData?.userResponse || []).map((user) => {
             const fullName = getFullName(user)
 
             return {
-              value: fullName,
-              label: `${fullName} {${user.email}}`,
+              value: user.id,
+              label: `${fullName} (${user.email})`,
               icon: UserRound,
             }
           })
         )}
-        {renderSelect("estado", "Estado", projectStatuses)}
-        <form.Field name="fecha_inicio">
+        {renderSelect("status", "Estado", PROJECT_STATUS_OPTIONS)}
+        <form.Field name="startDate">
           {(startField) => (
-            <form.Field name="fecha_fin">
+            <form.Field name="plannedDate">
               {(endField) => (
                 <DateRangeFields
-                  startId="projects-filter-fecha-inicio"
-                  endId="projects-filter-fecha-fin"
+                  startId="projects-filter-start-date"
+                  endId="projects-filter-planned-date"
                   startLabel="Fecha de inicio"
                   endLabel="Fecha de entrega"
                   required={false}
@@ -384,7 +289,7 @@ export const ProjectsFiltersDrawer = ({
     <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
       <DrawerContent className="data-[swipe-axis=x]:[--drawer-content-width:88%] data-[swipe-axis=x]:sm:[--drawer-content-width:32rem]">
         <ProjectsFiltersForm
-          key={`${filters.nombre}|${filters.tipo}|${filters.responsable}|${filters.estado}|${filters.fecha_inicio}|${filters.fecha_fin}`}
+          key={`${filters.name}|${filters.type}|${filters.responsibleId}|${filters.status}|${filters.startDate}|${filters.plannedDate}`}
           filters={filters}
           onOpenChange={onOpenChange}
           onApply={onApply}

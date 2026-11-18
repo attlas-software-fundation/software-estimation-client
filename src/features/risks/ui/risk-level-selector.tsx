@@ -16,7 +16,7 @@ export const RiskLevelSelector = ({
   disabled,
 }: RiskLevelSelectorProps) => {
   return (
-    <div className="mb-4 flex gap-2">
+    <div className="flex flex-wrap gap-2">
       {RISK_LEVEL_OPTIONS.map((option) => {
         const Icon = option.icon
         const isSelected = currentLevel === option.value

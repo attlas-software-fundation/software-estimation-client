@@ -1,85 +1,125 @@
-"use client"
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { PROFILES_QUERY_KEY } from "@/features/profiles/hooks/use-profiles"
+import { invalidateProjectCosts } from "@/features/costs/hooks/query-keys"
+import { PROFILES_QUERY_KEY } from "@/features/profiles/hooks"
+import { profilesService } from "@/features/profiles/services/profiles-service"
 import { invalidateReportQueries } from "@/features/reports/hooks/query-keys"
+import type { StoryFormValues, TaskFormValues } from "../schemas/story-schema"
 import { storiesService } from "../services/stories-service"
-import type {
-  BacklogTask,
-  MoveDirection,
-  UserStory,
-} from "../types/story-types"
+import type { BacklogFilters, UserStoryResponse } from "../types"
 
-export const useStories = (projectId: string) => {
+export const useStories = (projectId: string, filters: BacklogFilters = {}) => {
   const queryClient = useQueryClient()
   const queryKey = ["backlog", projectId]
-  const refresh = () => {
-    queryClient.invalidateQueries({ queryKey })
-    queryClient.invalidateQueries({ queryKey: ["user-stories", projectId] })
-    queryClient.invalidateQueries({
-      queryKey: ["sprint-calculation", projectId],
-    })
-    queryClient.invalidateQueries({
-      queryKey: ["task-hours", projectId],
-    })
-    queryClient.invalidateQueries({
-      queryKey: ["project-costs", projectId],
-    })
-    invalidateReportQueries(queryClient)
-  }
-  const backlog = useQuery({
-    queryKey,
-    queryFn: () => storiesService.getStories(projectId),
+
+  const refresh = async () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey }),
+      queryClient.invalidateQueries({ queryKey: ["user-stories", projectId] }),
+      queryClient.invalidateQueries({
+        queryKey: ["sprint-calculation", projectId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["project-task-hours", projectId],
+      }),
+      invalidateProjectCosts(queryClient, projectId),
+      invalidateReportQueries(queryClient),
+    ])
+
+  const storiesQuery = useQuery({
+    queryKey: [...queryKey, "stories", filters],
+    queryFn: () => storiesService.getStories(projectId, filters),
+    enabled: Boolean(projectId),
   })
-  const profiles = useQuery({
-    queryKey: [...PROFILES_QUERY_KEY, "assignable"],
-    queryFn: storiesService.getProfiles,
+
+  const tasksQuery = useQuery({
+    queryKey: [...queryKey, "tasks"],
+    queryFn: () => storiesService.getProjectTasks(projectId),
+    enabled: Boolean(projectId),
   })
+
+  const profilesQuery = useQuery({
+    queryKey: [...PROFILES_QUERY_KEY, "active"],
+    queryFn: () => profilesService.getActiveProfiles(),
+  })
+
   const useMutationAction = <TVariables>(
     mutationFn: (variables: TVariables) => Promise<unknown>
-  ) => useMutation({ mutationFn, onSuccess: refresh })
+  ) => useMutation({ mutationFn, onSettled: refresh })
 
   return {
-    ...backlog,
-    profiles: profiles.data ?? [],
-    createStory: useMutationAction(
-      (
-        values: Omit<
-          UserStory,
-          "id" | "projectId" | "code" | "createdAt" | "updatedAt"
-        >
-      ) => storiesService.createStory(projectId, values)
-    ),
+    stories: storiesQuery.data || [],
+    tasks: tasksQuery.data || [],
+    profiles: profilesQuery.data || [],
+    isLoading: storiesQuery.isLoading || tasksQuery.isLoading,
+    isError: storiesQuery.isError || tasksQuery.isError,
+    error: storiesQuery.error || tasksQuery.error,
+    refetch: () => Promise.all([storiesQuery.refetch(), tasksQuery.refetch()]),
+    createStory: useMutationAction(async (values: StoryFormValues) => {
+      const created = await storiesService.createStory({
+        projectId,
+        title: values.title,
+        description: values.description,
+        priority: values.priority,
+      })
+      if (values.status !== "DRAFT") {
+        return storiesService.updateStory({
+          id: created.id,
+          code: created.code,
+          title: values.title,
+          description: values.description,
+          acceptanceCriteria: created.acceptanceCriteria,
+          priority: values.priority,
+          status: values.status,
+          storyPoints: created.storyPoints,
+        })
+      }
+      return created
+    }),
     updateStory: useMutationAction(
-      ({ id, values }: { id: string; values: Partial<UserStory> }) =>
-        storiesService.updateStory(projectId, id, values)
-    ),
-    deleteStory: useMutationAction((id: string) =>
-      storiesService.deleteStory(projectId, id)
-    ),
-    createTask: useMutationAction(
       ({
-        storyId,
+        story,
         values,
       }: {
-        storyId: string
-        values: Omit<BacklogTask, "id" | "storyId" | "createdAt" | "updatedAt">
-      }) => storiesService.createTask(projectId, storyId, values)
+        story: UserStoryResponse
+        values: StoryFormValues
+      }) =>
+        storiesService.updateStory({
+          id: story.id,
+          code: story.code,
+          title: values.title,
+          description: values.description,
+          acceptanceCriteria: story.acceptanceCriteria,
+          priority: values.priority,
+          status: values.status,
+          storyPoints: story.storyPoints,
+        })
+    ),
+    deleteStory: useMutationAction((id: string) =>
+      storiesService.deleteStory(id)
+    ),
+    reorderStories: useMutationAction((storyIds: string[]) =>
+      storiesService.reorderStories(projectId, storyIds)
+    ),
+    createTask: useMutationAction(
+      ({ storyId, values }: { storyId: string; values: TaskFormValues }) =>
+        storiesService.createTask({
+          storyId,
+          ...values,
+        })
     ),
     updateTask: useMutationAction(
-      ({ id, values }: { id: string; values: Partial<BacklogTask> }) =>
-        storiesService.updateTask(projectId, id, values)
+      ({ id, values }: { id: string; values: TaskFormValues }) =>
+        storiesService.updateTask({
+          id,
+          ...values,
+        })
+    ),
+    reorderTasks: useMutationAction(
+      ({ storyId, taskIds }: { storyId: string; taskIds: string[] }) =>
+        storiesService.reorderTasks(storyId, taskIds)
     ),
     deleteTask: useMutationAction((id: string) =>
-      storiesService.deleteTask(projectId, id)
-    ),
-    moveStory: useMutationAction(
-      ({ id, direction }: { id: string; direction: MoveDirection }) =>
-        storiesService.moveStory(projectId, id, direction)
-    ),
-    moveTask: useMutationAction(
-      ({ id, direction }: { id: string; direction: MoveDirection }) =>
-        storiesService.moveTask(projectId, id, direction)
+      storiesService.deleteTask(id)
     ),
   }
 }

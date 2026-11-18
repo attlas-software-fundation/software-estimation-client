@@ -1,28 +1,49 @@
 import { z } from "zod"
+import {
+  PROJECT_STATUSES,
+  PROJECT_TYPES,
+  type ProjectStatus,
+  type ProjectType,
+} from "@/enumeration"
 import { refineDateRange } from "@/lib/date-range"
 
 export const projectSchema = z
   .object({
-    nombre: z.string().min(1, "Este campo es obligatorio"),
-    descripcion: z
+    name: z
+      .string()
+      .min(1, "El nombre del proyecto es obligatorio")
+      .max(150, "El nombre del proyecto no puede superar los 150 caracteres"),
+    description: z
       .string()
       .trim()
-      .max(500, "Máx. 500 caracteres")
+      .max(500, "La descripción no puede superar los 500 caracteres")
       .refine((value) => value.length === 0 || value.length >= 10, {
         message: "La descripción debe tener al menos 10 caracteres",
       }),
-    tipo: z.string().min(1, "Selecciona el tipo de proyecto"),
-    fecha_inicio: z.date().or(z.undefined()),
-    fecha_fin: z.date().or(z.undefined()),
-    responsable: z.string().min(1, "Selecciona un responsable"),
-    estado: z.string().min(1, "Selecciona el estado"),
+    type: z.enum(PROJECT_TYPES, {
+      message: "Selecciona el tipo de proyecto",
+    }),
+    startDate: z.date().or(z.undefined()),
+    plannedDate: z.date().or(z.undefined()),
+    responsibleId: z.string().min(1, "Selecciona un responsable"),
+    status: z.enum(PROJECT_STATUSES, {
+      message: "Selecciona el estado",
+    }),
   })
   .superRefine((data, ctx) => {
-    refineDateRange(ctx, data.fecha_inicio, data.fecha_fin, {
-      start: ["fecha_inicio"],
-      end: ["fecha_fin"],
+    refineDateRange(ctx, data.startDate, data.plannedDate, {
+      start: ["startDate"],
+      end: ["plannedDate"],
     })
   })
 
-export type ProjectFormValues = z.infer<typeof projectSchema>
+export type ProjectFormValues = {
+  name: string
+  description: string
+  type: ProjectType
+  startDate: Date | undefined
+  plannedDate: Date | undefined
+  responsibleId: string
+  status: ProjectStatus
+}
 export type ProjectEditFormValues = ProjectFormValues

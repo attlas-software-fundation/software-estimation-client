@@ -1,3 +1,6 @@
+import type { CurrencyCode } from "@/enumeration/currency-code"
+import type { TaskProfileCostResponse } from "./project-cost-response"
+
 export type TaskCostProfile = {
   profileId: string
   profileName: string
@@ -11,4 +14,6 @@ export type TaskCost = {
   totalHours: number
   profiles: TaskCostProfile[]
   totalCost: number
+  currency?: CurrencyCode | null
+  contributions?: readonly TaskProfileCostResponse[]
 }

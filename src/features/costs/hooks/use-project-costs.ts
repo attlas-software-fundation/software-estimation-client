@@ -1,15 +1,10 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { costsService } from "../services/costs-service"
+import { projectCostQueryOptions } from "./project-cost-query-options"
 
-export const PROJECT_COSTS_QUERY_KEY = ["project-costs"]
+export { PROJECT_COSTS_QUERY_KEY } from "./query-keys"
 
 export const useProjectCosts = (projectId: string) => {
-  return useQuery({
-    queryKey: [...PROJECT_COSTS_QUERY_KEY, projectId],
-    queryFn: () => costsService.getProjectCostSummary(projectId),
-    staleTime: 0,
-    refetchOnMount: "always",
-  })
+  return useQuery(projectCostQueryOptions(projectId))
 }

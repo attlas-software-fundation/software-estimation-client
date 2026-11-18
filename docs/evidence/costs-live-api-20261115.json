@@ -1,0 +1,111 @@
+{
+  "api": "http://localhost:8080",
+  "fixture": {
+    "tag": "COSTS-1794730023054",
+    "projectId": "25b43db9-2ac8-42ff-901b-39da9a363d99",
+    "profileIds": [
+      "a59ae96c-8392-4922-a338-62ae3f61f923",
+      "2d065215-ac9c-4d81-94b2-60c955e95ebc"
+    ],
+    "storyId": "05a1c44f-47c4-4411-9ffc-0f31fe023442",
+    "taskId": "e0736eee-a385-4300-b382-2d251325e2b2"
+  },
+  "checks": [
+    {
+      "name": "Contrato OpenAPI real disponible",
+      "status": "passed"
+    },
+    {
+      "name": "CORS real para localhost:3000 y Authorization",
+      "status": "passed"
+    },
+    {
+      "name": "Autenticación real y permiso cost:read",
+      "status": "passed"
+    },
+    {
+      "name": "Renovación real del JWT",
+      "status": "passed"
+    },
+    {
+      "name": "Estado de carga durante la consulta HTTP real",
+      "status": "passed"
+    },
+    {
+      "name": "Proyecto vacío real",
+      "status": "passed",
+      "total": 0,
+      "currency": null
+    },
+    {
+      "name": "Validación real de tarea sin perfiles",
+      "status": "passed",
+      "http": 400,
+      "message": "La tarea debe tener perfiles asignados"
+    },
+    {
+      "name": "Costo real de 9 horas y CER 50",
+      "status": "passed",
+      "total": 450,
+      "currency": "PEN"
+    },
+    {
+      "name": "Recálculo real al guardar 10 horas",
+      "status": "passed",
+      "total": 500
+    },
+    {
+      "name": "Recálculo real al guardar CER 60",
+      "status": "passed",
+      "total": 600
+    },
+    {
+      "name": "Recarga de la API real al recuperar el foco",
+      "status": "passed",
+      "total": 650
+    },
+    {
+      "name": "Desglose real de dos perfiles",
+      "status": "passed",
+      "total": 500,
+      "subtotals": [200, 300]
+    },
+    {
+      "name": "Recálculo real al cambiar responsables",
+      "status": "passed",
+      "total": 400
+    },
+    {
+      "name": "Horas y CER negativos rechazados por la API",
+      "status": "passed",
+      "http": 400,
+      "preservedTotal": 600
+    },
+    {
+      "name": "Proyecto inexistente real",
+      "status": "passed",
+      "http": 404
+    },
+    {
+      "name": "Consulta sin autenticación rechazada",
+      "status": "passed",
+      "http": 401
+    },
+    {
+      "name": "Vista de costos renderizada con datos de la API real",
+      "status": "passed",
+      "total": 600,
+      "tasks": 1,
+      "profiles": 1
+    }
+  ],
+  "result": "passed",
+  "environment": {
+    "backendRevision": "86d61b505a0f4589ddb6556b14eb4c85bcda6c5f",
+    "backendTemporaryFixes": true,
+    "database": "inscope_costs_integration_20261115",
+    "flywayEnabled": false,
+    "ddlAuto": "none",
+    "verification": "Real HTTP requests and PostgreSQL with newly created test data"
+  }
+}

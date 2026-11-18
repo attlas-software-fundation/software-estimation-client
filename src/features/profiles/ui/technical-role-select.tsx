@@ -1,6 +1,6 @@
 "use client"
 
-import { Layers, type LucideIcon } from "lucide-react"
+import { IdCardIcon, type LucideIcon } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -18,7 +18,7 @@ type TechnicalRoleSelectProps = {
   onValueChange: (value: string) => void
 }
 
-const AllRolesIcon = Layers
+const AllRolesIcon = IdCardIcon
 const ALL_ROLES_COLOR = "text-muted-foreground"
 
 const roleOptionLabel = (label: string, Icon: LucideIcon, color: string) => {
@@ -78,9 +78,7 @@ export const TechnicalRoleSelect = ({
       value={value === "ALL" ? "" : value}
       items={items}
       onValueChange={(nextValue) => {
-        if (typeof nextValue === "string") {
-          onValueChange(nextValue)
-        }
+        onValueChange(nextValue ?? "")
       }}
     >
       <SelectTrigger id={id} className="w-full">

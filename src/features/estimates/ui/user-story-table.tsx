@@ -20,10 +20,9 @@ import {
 import { toast } from "@/components/ui/toast"
 import { getErrorMessage } from "@/lib/form-errors"
 import { TableEmptyState } from "@/components/table-empty-state"
+import type { UserStory } from "@/features/stories/types"
 import { useAssignStoryPoints, useUserStories } from "../hooks/use-user-stories"
-import { STORY_POINTS_OPTIONS } from "../types"
-import { userStoriesService } from "../services/user-stories.service"
-import type { UserStoryItem } from "../services/user-stories.service"
+import { STORY_POINTS_OPTIONS, isStoryPoints } from "../types"
 import { useProjectAccess } from "@/features/projects/hooks/use-project-access"
 
 type UserStoryTableProps = {
@@ -36,9 +35,9 @@ export const UserStoryTable = ({ projectId }: UserStoryTableProps) => {
   const access = useProjectAccess(projectId)
   const canWrite = access.canEditEstimation
 
-  const handleAssign = async (story: UserStoryItem, value: string) => {
+  const handleAssign = async (story: UserStory, value: string) => {
     const points = Number(value)
-    if (!userStoriesService.isStoryPoints(points)) return
+    if (!isStoryPoints(points)) return
     if (story.storyPoints === points) return
 
     try {
@@ -61,10 +60,12 @@ export const UserStoryTable = ({ projectId }: UserStoryTableProps) => {
   }
 
   const totalPoints = stories.reduce(
-    (sum, story) => sum + Number(story.storyPoints),
+    (sum, story) => sum + Number(story.storyPoints ?? 0),
     0
   )
-  const assignedCount = stories.filter((story) => story.storyPoints > 0).length
+  const assignedCount = stories.filter(
+    (story) => story.storyPoints !== null && story.storyPoints > 0
+  ).length
 
   if (isLoading) {
     return (
@@ -79,7 +80,7 @@ export const UserStoryTable = ({ projectId }: UserStoryTableProps) => {
   if (stories.length === 0) {
     return (
       <TableEmptyState
-        message="No hay historias de usuario en el backlog. Crea historias en Historias y tareas para visualizarlas aquí."
+        message="No hay historias de usuario en el backlog."
         icon={BookOpenIcon}
       />
     )
@@ -87,22 +88,29 @@ export const UserStoryTable = ({ projectId }: UserStoryTableProps) => {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-muted-foreground text-sm">
-        {assignedCount} de {stories.length} historias con puntos. Total:{" "}
-        <span className="text-foreground font-medium tabular-nums">
-          {totalPoints} SP
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-muted-foreground">
+          {assignedCount} de {stories.length} historias estimadas
         </span>
-      </p>
+        <span className="font-semibold tabular-nums">
+          Total: {totalPoints} SP
+        </span>
+      </div>
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Historia de usuario</TableHead>
-            <TableHead className="w-40">Story Points</TableHead>
+        <TableHeader className="bg-slate-100 [&_tr]:border-b-2 [&_tr]:border-slate-300 [&_tr]:hover:bg-transparent">
+          <TableRow className="border-0 hover:bg-transparent [&_th]:border-b-2 [&_th]:border-slate-300">
+            <TableHead className="text-slate-700">
+              Historia de usuario
+            </TableHead>
+            <TableHead className="w-40 text-slate-700">Story Points</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {stories.map((story) => (
-            <TableRow key={story.id}>
+            <TableRow
+              key={story.id}
+              className="border-0 [&_td]:border-b [&_td]:border-slate-300"
+            >
               <TableCell>
                 <span className="text-sm font-medium">
                   {story.code} - {story.title}
@@ -111,7 +119,11 @@ export const UserStoryTable = ({ projectId }: UserStoryTableProps) => {
               <TableCell>
                 <Select
                   disabled={!canWrite}
-                  value={story.storyPoints > 0 ? String(story.storyPoints) : ""}
+                  value={
+                    story.storyPoints !== null && story.storyPoints > 0
+                      ? String(story.storyPoints)
+                      : ""
+                  }
                   onValueChange={(value) => {
                     if (value) {
                       void handleAssign(story, value)

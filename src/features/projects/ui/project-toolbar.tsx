@@ -2,17 +2,23 @@
 
 import { type ReactNode } from "react"
 import { FilterIcon, SearchIcon, X } from "lucide-react"
-
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { formatDate } from "@/lib/format"
-import type { ProjectFilters } from "../types/project-types"
+import {
+  PROJECT_STATUS_LABELS,
+  PROJECT_TYPE_LABELS,
+  type ProjectFilters,
+  type ProjectStatus,
+  type ProjectType,
+} from "../types"
 
 type ProjectToolbarProps = {
   search: string
   activeFilters: number
   filters: ProjectFilters
+  responsibleLabel?: string
   onSearchChange: (search: string) => void
   onOpenFilters: () => void
   onRemoveFilter: (key: keyof ProjectFilters) => void
@@ -23,6 +29,7 @@ export const ProjectToolbar = ({
   search,
   activeFilters,
   filters,
+  responsibleLabel,
   onSearchChange,
   onOpenFilters,
   onRemoveFilter,
@@ -36,7 +43,7 @@ export const ProjectToolbar = ({
 
           <Input
             value={search}
-            placeholder="Buscar por nombre o correo"
+            placeholder="Buscar por nombre o descripción"
             className="w-full pl-8"
             onChange={(event) => onSearchChange(event.target.value)}
           />
@@ -63,84 +70,84 @@ export const ProjectToolbar = ({
 
       {activeFilters > (search ? 1 : 0) && (
         <div className="flex flex-wrap items-center gap-2">
-          {filters.nombre && (
+          {filters.name && (
             <Badge
               variant="outline"
               className="bg-primary/5 text-primary gap-1 px-2 py-1"
             >
-              Nombre: {filters.nombre}
+              Nombre: {filters.name}
               <button
-                onClick={() => onRemoveFilter("nombre")}
+                onClick={() => onRemoveFilter("name")}
                 className="text-primary hover:text-primary/80"
               >
                 <X className="size-3" />
               </button>
             </Badge>
           )}
-          {filters.tipo && (
+          {filters.type && (
             <Badge
               variant="outline"
               className="gap-1 border-blue-200 bg-blue-50 px-2 py-1 text-blue-700"
             >
-              Tipo: {filters.tipo}
+              Tipo: {PROJECT_TYPE_LABELS[filters.type as ProjectType]}
               <button
-                onClick={() => onRemoveFilter("tipo")}
+                onClick={() => onRemoveFilter("type")}
                 className="text-blue-700 hover:text-blue-900"
               >
                 <X className="size-3" />
               </button>
             </Badge>
           )}
-          {filters.responsable && (
+          {filters.responsibleId && (
             <Badge
               variant="outline"
               className="gap-1 border-purple-200 bg-purple-50 px-2 py-1 text-purple-700"
             >
-              Responsable: {filters.responsable}
+              Responsable: {responsibleLabel || filters.responsibleId}
               <button
-                onClick={() => onRemoveFilter("responsable")}
+                onClick={() => onRemoveFilter("responsibleId")}
                 className="text-purple-700 hover:text-purple-900"
               >
                 <X className="size-3" />
               </button>
             </Badge>
           )}
-          {filters.estado && (
+          {filters.status && (
             <Badge
               variant="outline"
               className="gap-1 border-amber-200 bg-amber-50 px-2 py-1 text-amber-700"
             >
-              Estado: {filters.estado}
+              Estado: {PROJECT_STATUS_LABELS[filters.status as ProjectStatus]}
               <button
-                onClick={() => onRemoveFilter("estado")}
+                onClick={() => onRemoveFilter("status")}
                 className="text-amber-700 hover:text-amber-900"
               >
                 <X className="size-3" />
               </button>
             </Badge>
           )}
-          {filters.fecha_inicio && (
+          {filters.startDate && (
             <Badge
               variant="outline"
               className="bg-primary/5 text-primary gap-1 px-2 py-1"
             >
-              Inicio: {formatDate(filters.fecha_inicio)}
+              Inicio: {formatDate(filters.startDate)}
               <button
-                onClick={() => onRemoveFilter("fecha_inicio")}
+                onClick={() => onRemoveFilter("startDate")}
                 className="text-primary hover:text-primary/80"
               >
                 <X className="size-3" />
               </button>
             </Badge>
           )}
-          {filters.fecha_fin && (
+          {filters.plannedDate && (
             <Badge
               variant="outline"
               className="bg-primary/5 text-primary gap-1 px-2 py-1"
             >
-              Entrega: {formatDate(filters.fecha_fin)}
+              Entrega: {formatDate(filters.plannedDate)}
               <button
-                onClick={() => onRemoveFilter("fecha_fin")}
+                onClick={() => onRemoveFilter("plannedDate")}
                 className="text-primary hover:text-primary/80"
               >
                 <X className="size-3" />

@@ -1,20 +1,45 @@
 import { apiClient, getAccessToken } from "@/lib/api"
-import { readJson, removeJson, STORAGE_KEYS, writeJson } from "@/lib/storage"
-import type { AuthResponse, Session, User } from "../types"
+import type { AuthResponse, Session, UserResponse } from "../types"
 
-export const readSession = () => readJson<Session>(STORAGE_KEYS.SESSION)
+type JwtAccessPayload = {
+  permissions?: string[]
+}
 
-export const writeSession = (session: Session) => {
-  writeJson(STORAGE_KEYS.SESSION, session)
+const decodeJwtPayload = (token: string): JwtAccessPayload | null => {
+  try {
+    const parts = token.split(".")
+    if (parts.length < 2 || !parts[1]) {
+      return null
+    }
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/")
+    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=")
+    const decoded =
+      "atob" in globalThis
+        ? globalThis.atob(padded)
+        : Buffer.from(padded, "base64").toString("utf-8")
+    return JSON.parse(decoded) as JwtAccessPayload
+  } catch {
+    return null
+  }
+}
+
+export const getTokenPermissions = (token: string | null): string[] => {
+  if (!token) {
+    return []
+  }
+  const payload = decodeJwtPayload(token)
+  if (!payload || !Array.isArray(payload.permissions)) {
+    return []
+  }
+  return payload.permissions
 }
 
 export const clearSession = () => {
-  removeJson(STORAGE_KEYS.SESSION)
   apiClient.clearAuthTokens()
 }
 
 export const sessionFromUser = (
-  user: User,
+  user: UserResponse,
   permissions: string[]
 ): Session => ({
   userId: user.id,
@@ -29,9 +54,7 @@ export const sessionFromUser = (
 
 export const saveAuth = (payload: AuthResponse): Session => {
   apiClient.storeAuthTokens(payload)
-  const session = sessionFromUser(payload.user, payload.permissions)
-  writeSession(session)
-  return session
+  return sessionFromUser(payload.user, payload.permissions)
 }
 
 export const hasAccessToken = () => Boolean(getAccessToken())

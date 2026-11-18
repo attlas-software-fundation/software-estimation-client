@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query"
+import { getAccessToken } from "@/lib/api"
 import { authService } from "../services/auth-service"
 import {
   clearSession,
+  getTokenPermissions,
   hasAccessToken,
-  readSession,
   sessionFromUser,
-  writeSession,
 } from "../utils/session"
 
 export const authQueryKeys = {
@@ -18,13 +18,10 @@ const loadSession = async () => {
     return null
   }
 
-  const cached = readSession()
-
   try {
     const user = await authService.getProfile()
-    const session = sessionFromUser(user, cached?.permissions ?? [])
-    writeSession(session)
-    return session
+    const permissions = getTokenPermissions(getAccessToken())
+    return sessionFromUser(user, permissions)
   } catch {
     clearSession()
     return null

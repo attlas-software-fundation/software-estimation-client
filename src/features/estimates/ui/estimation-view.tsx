@@ -7,135 +7,93 @@ import {
   ClockIcon,
   SlidersHorizontalIcon,
 } from "lucide-react"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/lib/utils"
 import { SprintCalculation } from "./sprint-calculation"
 import { SprintTeamConfigForm } from "./sprint-team-config-form"
 import { TaskHoursTable } from "./task-hours-table"
 import { UserStoryTable } from "./user-story-table"
-
-const ACTIVE_TAB_STORAGE_KEY = "estimation-active-tab"
-const VALID_TABS = ["historias", "config", "calculo", "horas"]
 
 type EstimationViewProps = {
   projectId: string
 }
 
 export const EstimationView = ({ projectId }: EstimationViewProps) => {
-  const [activeTab, setActiveTab] = useState<string>(() => {
-    if (typeof window === "undefined") {
-      return "historias"
-    }
-
-    const savedTab = localStorage.getItem(ACTIVE_TAB_STORAGE_KEY)
-    if (savedTab && VALID_TABS.includes(savedTab)) {
-      return savedTab
-    }
-
-    return "historias"
-  })
-
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab)
-    localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, tab)
-  }
+  const [activeTab, setActiveTab] = useState<string>("config")
 
   const getTriggerClass = (tabKey: string) =>
-    `flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
+    cn(
+      "flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition-all cursor-pointer border border-transparent",
       activeTab === tabKey
-        ? "bg-primary text-primary-foreground font-semibold shadow-sm"
-        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-    }`
+        ? "!bg-primary !text-primary-foreground font-semibold shadow-xs"
+        : "text-muted-foreground hover:bg-background/80 hover:text-foreground font-medium"
+    )
 
   return (
     <div className="flex min-h-full w-full flex-col gap-6 pb-16">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Estimación ágil</h1>
         <p className="text-muted-foreground text-sm">
-          Calcula sprints, tiempo estimado y asignación de horas de esfuerzo.
+          Planificación de sprints, puntos de historia y esfuerzo estimado.
         </p>
       </div>
 
       <Tabs
         value={activeTab}
-        onValueChange={handleTabChange}
-        className="w-full"
+        onValueChange={setActiveTab}
+        className="flex w-full flex-col gap-6"
       >
-        <TabsList className="flex h-auto flex-wrap items-center justify-start gap-1 border-b bg-transparent p-0 pb-2 text-sm font-medium">
-          <TabsTrigger
-            value="historias"
-            className={getTriggerClass("historias")}
-          >
-            <BookOpenIcon className="size-4" />
-            <span>Historias y puntos</span>
-          </TabsTrigger>
-          <TabsTrigger value="config" className={getTriggerClass("config")}>
-            <SlidersHorizontalIcon className="size-4" />
-            <span>Configuración de sprint</span>
-          </TabsTrigger>
-          <TabsTrigger value="calculo" className={getTriggerClass("calculo")}>
-            <CalculatorIcon className="size-4" />
-            <span>Cálculo de tiempo</span>
-          </TabsTrigger>
-          <TabsTrigger value="horas" className={getTriggerClass("horas")}>
-            <ClockIcon className="size-4" />
-            <span>Horas por tarea</span>
-          </TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto pb-1">
+          <TabsList className="bg-muted/40 inline-flex h-auto items-center gap-1.5 rounded-xl border p-1.5 shadow-xs">
+            <TabsTrigger value="config" className={getTriggerClass("config")}>
+              <SlidersHorizontalIcon className="size-4 shrink-0" />
+              <span>Configuración de sprint</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="historias"
+              className={getTriggerClass("historias")}
+            >
+              <BookOpenIcon className="size-4 shrink-0" />
+              <span>Puntos por historia</span>
+            </TabsTrigger>
+            <TabsTrigger value="horas" className={getTriggerClass("horas")}>
+              <ClockIcon className="size-4 shrink-0" />
+              <span>Horas por tarea</span>
+            </TabsTrigger>
+            <TabsTrigger value="calculo" className={getTriggerClass("calculo")}>
+              <CalculatorIcon className="size-4 shrink-0" />
+              <span>Cálculo y resumen</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        <TabsContent value="historias" className="pt-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Story Points por historia</CardTitle>
-              <CardDescription>
-                Asigna Story Points a cada historia. El total alimenta el
-                cálculo de sprints.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <UserStoryTable projectId={projectId} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <div className="w-full">
+          <TabsContent value="config" className="mt-0 outline-none">
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-base font-semibold">
+                  Parámetros del sprint
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SprintTeamConfigForm projectId={projectId} />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="config" className="pt-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuración del equipo y sprint</CardTitle>
-              <CardDescription>
-                Velocidad y duración. El tiempo calendario se recalcula solo.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <SprintTeamConfigForm projectId={projectId} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <TabsContent value="historias" className="mt-0 outline-none">
+            <UserStoryTable projectId={projectId} />
+          </TabsContent>
 
-        <TabsContent value="calculo" className="pt-2">
-          <SprintCalculation projectId={projectId} />
-        </TabsContent>
+          <TabsContent value="horas" className="mt-0 outline-none">
+            <TaskHoursTable projectId={projectId} />
+          </TabsContent>
 
-        <TabsContent value="horas" className="pt-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Horas estimadas por tarea</CardTitle>
-              <CardDescription>
-                Las horas salen de la estimación de cada tarea y se reparte
-                entre los perfiles asignados. Puedes ajustarlas si hace falta.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <TaskHoursTable projectId={projectId} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <TabsContent value="calculo" className="mt-0 outline-none">
+            <SprintCalculation projectId={projectId} />
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   )

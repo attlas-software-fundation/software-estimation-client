@@ -9,6 +9,7 @@ import {
   ShieldCheckIcon,
   CopyIcon,
   CheckIcon,
+  XIcon,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -266,6 +267,7 @@ export const MyProfileDialog = ({
             onClick={() => onOpenChange(false)}
             className="w-full sm:w-auto"
           >
+            <XIcon />
             Cerrar
           </Button>
         </DialogFooter>

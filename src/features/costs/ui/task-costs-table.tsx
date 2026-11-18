@@ -11,15 +11,13 @@ import {
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { formatCurrency } from "@/lib/format"
 import { TableEmptyState } from "@/components/table-empty-state"
 import type { TaskCost } from "../types/task-cost"
-import { CostProfileIdentity } from "./cost-profile-identity"
+import { TaskCostRows } from "./task-cost-rows"
 
 type TaskCostsTableProps = {
   taskCosts: readonly TaskCost[]
@@ -31,8 +29,7 @@ export const TaskCostsTable = ({ taskCosts }: TaskCostsTableProps) => {
       <CardHeader>
         <CardTitle>Costos por tarea</CardTitle>
         <CardDescription>
-          El costo de cada tarea es horas × CER del perfil técnico (soles). Si
-          hay varios perfiles, se suma el de cada uno.
+          Detalle de horas, CER horario y costo por perfil de cada tarea.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -42,38 +39,32 @@ export const TaskCostsTable = ({ taskCosts }: TaskCostsTableProps) => {
             icon={ReceiptIcon}
           />
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tarea</TableHead>
-                <TableHead>Perfil</TableHead>
-                <TableHead className="text-right">Horas</TableHead>
-                <TableHead className="text-right">Costo</TableHead>
+          <Table aria-label="Costos por tarea y contribución de cada perfil">
+            <TableHeader className="bg-slate-100 [&_tr]:border-b-2 [&_tr]:border-slate-300 [&_tr]:hover:bg-transparent">
+              <TableRow className="hover:bg-transparent">
+                <TableHead scope="col" className="text-slate-700">
+                  Tarea
+                </TableHead>
+                <TableHead scope="col" className="text-slate-700">
+                  Perfil técnico
+                </TableHead>
+                <TableHead scope="col" className="text-right text-slate-700">
+                  Horas
+                </TableHead>
+                <TableHead scope="col" className="text-right text-slate-700">
+                  CER por hora
+                </TableHead>
+                <TableHead scope="col" className="text-right text-slate-700">
+                  Costo por contribución
+                </TableHead>
+                <TableHead scope="col" className="text-right text-slate-700">
+                  Total de la tarea
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {taskCosts.map((task) => (
-                <TableRow key={task.taskId}>
-                  <TableCell className="font-medium">{task.taskName}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-2">
-                      {task.profiles.map((profile) => (
-                        <CostProfileIdentity
-                          key={profile.profileId}
-                          name={profile.profileName}
-                          role={profile.profileRole}
-                          email={profile.profileEmail}
-                        />
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {task.totalHours} h
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatCurrency(task.totalCost)}
-                  </TableCell>
-                </TableRow>
+              {taskCosts.map((task, index) => (
+                <TaskCostRows key={task.taskId} task={task} taskIndex={index} />
               ))}
             </TableBody>
           </Table>

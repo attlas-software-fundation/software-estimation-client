@@ -1,4 +1,4 @@
-import { toProjectStatus } from "../types/project-status"
+import type { ProjectStatus } from "../types/project-status"
 import {
   canDeleteProject,
   canEditBacklog,
@@ -9,11 +9,11 @@ import {
   getAllowedTransitions,
   getProjectStatusHint,
 } from "../utils/project-permissions"
-import { useProject } from "./use-projects"
+import { useProject } from "./use-project"
 
 export const useProjectAccess = (projectId: string) => {
   const query = useProject(projectId)
-  const status = toProjectStatus(query.data ? query.data.estado : "borrador")
+  const status: ProjectStatus = query.data ? query.data.status : "DRAFT"
 
   return {
     project: query.data,
