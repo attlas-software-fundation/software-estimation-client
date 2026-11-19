@@ -6,6 +6,7 @@ import type { UserSearchResponse } from "../types"
 export const userQueryKeys = {
   all: ["users"] as const,
   list: (query: QueryRequest) => ["users", query] as const,
+  responsibles: () => ["users", "responsibles"] as const,
   detail: (userId: string) => ["users", userId] as const,
 }
 
@@ -14,5 +15,12 @@ export const useUsers = (query: QueryRequest) => {
     queryKey: userQueryKeys.list(query),
     queryFn: () => usersService.getUsers(query),
     placeholderData: (previousData) => previousData,
+  })
+}
+
+export const useResponsibleUsers = () => {
+  return useQuery({
+    queryKey: userQueryKeys.responsibles(),
+    queryFn: () => usersService.getResponsibles(),
   })
 }

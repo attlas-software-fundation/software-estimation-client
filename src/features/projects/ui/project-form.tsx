@@ -2,6 +2,7 @@
 
 import { useForm } from "@tanstack/react-form"
 import { useRouter } from "next/navigation"
+import { isAfter, isBefore, startOfDay } from "date-fns"
 import { Loader2, SaveIcon, UserRound, XIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/datepicker"
@@ -18,7 +19,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "@/components/ui/toast"
-import { TABLE_PAGE_SIZE } from "@/lib/pagination"
 import { getErrorMessage, getFieldError } from "@/lib/form-errors"
 import { cn } from "@/lib/utils"
 import {
@@ -36,7 +36,7 @@ import {
   type ProjectStatus,
   type ProjectType,
 } from "../types"
-import { useUsers } from "@/features/users/hooks/use-users"
+import { useResponsibleUsers } from "@/features/users/hooks/use-users"
 import { getFullName } from "@/features/auth/types"
 
 type ProjectFormProps = {
@@ -79,15 +79,7 @@ export const ProjectForm = ({
     return access.allowedTransitions.includes(item.value)
   })
 
-  const { data: usersData } = useUsers({
-    filters: [],
-    pagination: {
-      orderBy: "createdAt",
-      pageSize: TABLE_PAGE_SIZE,
-      pageNumber: 0,
-      sortDirection: "ASC",
-    },
-  })
+  const { data: responsibles = [] } = useResponsibleUsers()
 
   const isEditing = Boolean(project)
   const isPending =
@@ -257,7 +249,7 @@ export const ProjectForm = ({
 
         <form.Field name="responsibleId">
           {(field) => {
-            const selected = usersData?.userResponse.find(
+            const selected = responsibles.find(
               (user) => user.id === field.state.value
             )
 
@@ -285,7 +277,7 @@ export const ProjectForm = ({
                     )}
                   </SelectTrigger>
                   <SelectContent>
-                    {usersData?.userResponse.map((user) => (
+                    {responsibles.map((user) => (
                       <SelectItem key={user.id} value={user.id}>
                         <div className="flex items-center gap-2">
                           <UserRound className="text-muted-foreground h-4 w-4" />
@@ -307,55 +299,86 @@ export const ProjectForm = ({
           }}
         </form.Field>
 
-        <form.Field name="startDate">
-          {(startField) => (
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor={startField.name}>
-                Fecha prevista de inicio{" "}
-                <span className="text-destructive">*</span>
-              </Label>
-              <DatePicker
-                id={startField.name}
-                value={startField.state.value}
-                disabled={fieldsLocked}
-                maxDate={form.getFieldValue("plannedDate")}
-                invalid={Boolean(getFieldError(startField.state.meta.errors))}
-                placeholder="Selecciona fecha de inicio"
-                onSelect={startField.handleChange}
-              />
-              {getFieldError(startField.state.meta.errors) ? (
-                <p className="text-destructive text-xs">
-                  {getFieldError(startField.state.meta.errors)}
-                </p>
-              ) : null}
-            </div>
-          )}
-        </form.Field>
+        <form.Subscribe
+          selector={(state) => ({
+            startDate: state.values.startDate,
+            plannedDate: state.values.plannedDate,
+          })}
+        >
+          {({ startDate, plannedDate }) => (
+            <>
+              <form.Field name="startDate">
+                {(startField) => (
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor={startField.name}>
+                      Fecha prevista de inicio{" "}
+                      <span className="text-destructive">*</span>
+                    </Label>
+                    <DatePicker
+                      id={startField.name}
+                      value={startField.state.value}
+                      disabled={fieldsLocked}
+                      maxDate={plannedDate}
+                      invalid={Boolean(
+                        getFieldError(startField.state.meta.errors)
+                      )}
+                      placeholder="Selecciona fecha de inicio"
+                      onSelect={(date) => {
+                        startField.handleChange(date)
+                        if (
+                          plannedDate &&
+                          isAfter(startOfDay(date), startOfDay(plannedDate))
+                        ) {
+                          form.setFieldValue("plannedDate", undefined)
+                        }
+                      }}
+                    />
+                    {getFieldError(startField.state.meta.errors) ? (
+                      <p className="text-destructive text-xs">
+                        {getFieldError(startField.state.meta.errors)}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+              </form.Field>
 
-        <form.Field name="plannedDate">
-          {(endField) => (
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor={endField.name}>
-                Fecha prevista de entrega{" "}
-                <span className="text-destructive">*</span>
-              </Label>
-              <DatePicker
-                id={endField.name}
-                value={endField.state.value}
-                disabled={fieldsLocked}
-                minDate={form.getFieldValue("startDate")}
-                invalid={Boolean(getFieldError(endField.state.meta.errors))}
-                placeholder="Selecciona fecha de entrega"
-                onSelect={endField.handleChange}
-              />
-              {getFieldError(endField.state.meta.errors) ? (
-                <p className="text-destructive text-xs">
-                  {getFieldError(endField.state.meta.errors)}
-                </p>
-              ) : null}
-            </div>
+              <form.Field name="plannedDate">
+                {(endField) => (
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor={endField.name}>
+                      Fecha prevista de entrega{" "}
+                      <span className="text-destructive">*</span>
+                    </Label>
+                    <DatePicker
+                      id={endField.name}
+                      value={endField.state.value}
+                      disabled={fieldsLocked}
+                      minDate={startDate}
+                      invalid={Boolean(
+                        getFieldError(endField.state.meta.errors)
+                      )}
+                      placeholder="Selecciona fecha de entrega"
+                      onSelect={(date) => {
+                        endField.handleChange(date)
+                        if (
+                          startDate &&
+                          isBefore(startOfDay(date), startOfDay(startDate))
+                        ) {
+                          form.setFieldValue("startDate", undefined)
+                        }
+                      }}
+                    />
+                    {getFieldError(endField.state.meta.errors) ? (
+                      <p className="text-destructive text-xs">
+                        {getFieldError(endField.state.meta.errors)}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+              </form.Field>
+            </>
           )}
-        </form.Field>
+        </form.Subscribe>
 
         <form.Field name="status">
           {(field) => {
