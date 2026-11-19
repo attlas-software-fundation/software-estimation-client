@@ -6,7 +6,7 @@ import { DataTable } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
 import { useDebounce, usePagination } from "@/hooks"
 import { TABLE_PAGE_SIZE } from "@/lib/pagination"
-import { useUsers } from "@/features/users/hooks/use-users"
+import { useResponsibleUsers } from "@/features/users/hooks/use-users"
 import { getFullName } from "@/features/auth/types"
 import {
   FilterOperator,
@@ -49,23 +49,15 @@ export const ProjectsView = () => {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
 
-  const { data: usersData } = useUsers({
-    filters: [],
-    pagination: {
-      orderBy: "createdAt",
-      pageSize: TABLE_PAGE_SIZE,
-      pageNumber: 0,
-      sortDirection: "ASC",
-    },
-  })
+  const { data: responsibles = [] } = useResponsibleUsers()
 
   const usersMap = useMemo(() => {
     const map = new Map<string, string>()
-    for (const user of usersData?.userResponse || []) {
+    for (const user of responsibles) {
       map.set(user.id, getFullName(user))
     }
     return map
-  }, [usersData])
+  }, [responsibles])
 
   const activeFilters =
     (search.length > 0 ? 1 : 0) +

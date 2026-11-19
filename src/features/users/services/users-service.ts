@@ -8,8 +8,18 @@ import type {
   UserSearchResponse,
 } from "../types"
 
+export type UserSummary = {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+}
+
 const getUsers = (query: QueryRequest) =>
   apiClient.post<UserSearchResponse>("/api/v1/users/search", query)
+
+const getResponsibles = () =>
+  apiClient.get<UserSummary[]>("/api/v1/users/responsibles")
 
 const getUser = (userId: string) =>
   apiClient.get<UserResponse>(`/api/v1/users/${userId}`)
@@ -29,9 +39,7 @@ const deleteUser = (userId: string) =>
   apiClient.delete(`/api/v1/users/${userId}`)
 
 const resendInvitation = (userId: string) =>
-  apiClient.post<MessageResponse>(
-    `/api/v1/users/${userId}/resend-invitation`
-  )
+  apiClient.post<MessageResponse>(`/api/v1/users/${userId}/resend-invitation`)
 
 const uploadAvatar = (userId: string, file: File) => {
   const formData = new FormData()
@@ -47,6 +55,7 @@ const deleteAvatar = (userId: string) =>
 
 export const usersService = {
   getUsers,
+  getResponsibles,
   getUser,
   createUser,
   updateUser,
