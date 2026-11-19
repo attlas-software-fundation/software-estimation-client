@@ -36,9 +36,8 @@ import {
   PROJECT_TYPE_OPTIONS,
   type ProjectFilters,
 } from "../types"
-import { useUsers } from "@/features/users/hooks/use-users"
+import { useResponsibleUsers } from "@/features/users/hooks/use-users"
 import { getFullName } from "@/features/auth/types"
-import { TABLE_PAGE_SIZE } from "@/lib/pagination"
 import { getFieldError } from "@/lib/form-errors"
 import { cn } from "@/lib/utils"
 
@@ -63,15 +62,7 @@ const ProjectsFiltersForm = ({
   onOpenChange,
   onApply,
 }: Omit<ProjectsFiltersDrawerProps, "open">) => {
-  const { data: usersData } = useUsers({
-    filters: [],
-    pagination: {
-      orderBy: "createdAt",
-      pageSize: TABLE_PAGE_SIZE,
-      pageNumber: 0,
-      sortDirection: "ASC",
-    },
-  })
+  const { data: responsibles = [] } = useResponsibleUsers()
 
   const form = useForm({
     defaultValues: {
@@ -215,7 +206,7 @@ const ProjectsFiltersForm = ({
         {renderSelect(
           "responsibleId",
           "Responsable",
-          (usersData?.userResponse || []).map((user) => {
+          responsibles.map((user) => {
             const fullName = getFullName(user)
 
             return {
@@ -226,27 +217,36 @@ const ProjectsFiltersForm = ({
           })
         )}
         {renderSelect("status", "Estado", PROJECT_STATUS_OPTIONS)}
-        <form.Field name="startDate">
-          {(startField) => (
-            <form.Field name="plannedDate">
-              {(endField) => (
-                <DateRangeFields
-                  startId="projects-filter-start-date"
-                  endId="projects-filter-planned-date"
-                  startLabel="Fecha de inicio"
-                  endLabel="Fecha de entrega"
-                  required={false}
-                  startValue={startField.state.value}
-                  endValue={endField.state.value}
-                  startError={getFieldError(startField.state.meta.errors)}
-                  endError={getFieldError(endField.state.meta.errors)}
-                  onStartSelect={startField.handleChange}
-                  onEndSelect={endField.handleChange}
-                />
+        <form.Subscribe
+          selector={(state) => ({
+            startDate: state.values.startDate,
+            plannedDate: state.values.plannedDate,
+          })}
+        >
+          {({ startDate, plannedDate }) => (
+            <form.Field name="startDate">
+              {(startField) => (
+                <form.Field name="plannedDate">
+                  {(endField) => (
+                    <DateRangeFields
+                      startId="projects-filter-start-date"
+                      endId="projects-filter-planned-date"
+                      startLabel="Fecha de inicio"
+                      endLabel="Fecha de entrega"
+                      required={false}
+                      startValue={startDate}
+                      endValue={plannedDate}
+                      startError={getFieldError(startField.state.meta.errors)}
+                      endError={getFieldError(endField.state.meta.errors)}
+                      onStartSelect={startField.handleChange}
+                      onEndSelect={endField.handleChange}
+                    />
+                  )}
+                </form.Field>
               )}
             </form.Field>
           )}
-        </form.Field>
+        </form.Subscribe>
       </div>
 
       <DrawerFooter className="flex-row">

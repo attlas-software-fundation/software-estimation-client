@@ -1,6 +1,6 @@
 "use client"
 
-import { format } from "date-fns"
+import { format, isAfter, isBefore, startOfDay } from "date-fns"
 import { es } from "date-fns/locale"
 import { CalendarIcon } from "lucide-react"
 
@@ -62,7 +62,11 @@ export const DatePicker = ({
           minDate={minDate}
           maxDate={maxDate}
           onSelect={(date) => {
-            if (date) onSelect(date)
+            if (!date) return
+            const day = startOfDay(date)
+            if (minDate && isBefore(day, startOfDay(minDate))) return
+            if (maxDate && isAfter(day, startOfDay(maxDate))) return
+            onSelect(date)
           }}
         />
       </PopoverContent>
